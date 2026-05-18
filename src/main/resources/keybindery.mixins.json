@@ -7,7 +7,8 @@
     "KeyBindsScreenCaptureMixin",
     "KeyMappingAccessor",
     "KeyMappingChordMixin",
-    "KeyboardChordPressMixin"
+    "KeyboardChordPressMixin",
+    "OptionsChordPersistenceMixin"
   ],
   "injectors": {
     "defaultRequire": 1
