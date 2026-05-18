@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "keybindery",
+  "version": "1.0.0",
+  "name": "Keybindery",
+  "description": "Chord keybinds and keybind UX for Fabric mods. Multi-key chords for any keymapping (vanilla + modded), in-config keybind API for consumer mods, auto-append fallback in vanilla / ModMenu / Cloth Config screens, controls-screen overhaul (search, sort, filter, MISC fix). Inspired by Amecs, Controlling, and Cloth Config.",
+  "authors": ["trevorschoeny"],
+  "license": "MIT",
+  "environment": "client",
+  "mixins": [
+    "keybindery.mixins.json"
+  ],
+  "entrypoints": {
+    "client": ["com.trevorschoeny.keybindery.KeybinderyClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "fabric-api": "*",
+    "minecraft": "~1.21",
+    "yet_another_config_lib_v3": "*"
+  }
+}

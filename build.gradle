@@ -1,0 +1,89 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// Keybindery — hybrid library + consumer mod for chord keybinds and keybind
+// UX. Established as a sub-unit of @ Trevlar Mods per §0030. Sibling to
+// MenuKit and MKC under the same domain-partition logic (§0042):
+//   :menukit            → UI library
+//   :menukit-containers → slot extension
+//   :keybindery         → input augmentation + keybind UX (this artifact)
+//
+// v1.0.0 scope:
+//   F1 — In-config keybind API for consumer mods (UI-lib-agnostic, silent-fail)
+//   F2 — Auto-append fallback in vanilla / ModMenu / Cloth Config screens
+//   F3 — Chord-for-any-keymapping (vanilla mixin into KeyMapping)
+//   F4 — Controls-screen overhaul (search, sort, filter, MISC fix)
+//
+// Per §0003 (this unit's canon): vanilla mixins may use
+// @Inject(at=HEAD, cancellable=true) followed by ci.cancel() as a
+// §0030-compliant alternative to @Overwrite.
+//
+// Section 1a (Imp's first commit): scaffolding only — mod loads in MC dev
+// runtime with no chord logic yet. F3 work imports from MK's existing
+// chord-keybind implementation (per Trev's migration directive, 2026-05-18).
+//
+// Workspace integration: included from the root settings.gradle as
+// `:keybindery`. Build with `./gradlew :keybindery:build`. Test with
+// `./gradlew :keybindery:runClient`.
+// ═══════════════════════════════════════════════════════════════════════════
+
+plugins {
+    id 'fabric-loom' version '1.14-SNAPSHOT'
+    id 'java'
+}
+
+version = property('mod_version')
+group   = property('maven_group')
+
+base.archivesName = 'keybindery'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+repositories {
+    maven { url 'https://maven.fabricmc.net/' }
+    // ModMenu — surfaces Keybindery's own YACL config screen on the mods
+    // list. Optional at runtime; declared compileOnly here so consumers
+    // can omit ModMenu without crashing Keybindery.
+    maven { url 'https://maven.terraformersmc.com/releases/' }
+    // YACL — config-screen framework used for Keybindery's own settings
+    // (Simultaneous Mode toggle + window). JIJ'd via Loom's `include` so
+    // players install Keybindery and YACL comes along bundled.
+    maven { url 'https://maven.isxander.dev/releases/' }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${property('minecraft_version')}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${property('loader_version')}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${property('fabric_version')}"
+
+    // ModMenu — soft dep. compileOnly here means Keybindery compiles
+    // against ModMenu's API; modLocalRuntime brings it into the dev launch
+    // so the in-game mod list shows Keybindery's config screen entry.
+    modCompileOnly "com.terraformersmc:modmenu:17.0.0"
+    modLocalRuntime "com.terraformersmc:modmenu:17.0.0"
+
+    // YACL — Keybindery's chosen config-screen framework. Bundled into
+    // Keybindery's jar via Loom's `include` (Jar-in-Jar), so players don't
+    // need to install YACL separately. `modImplementation` covers compile
+    // + dev runtime; `include` is what JIJs YACL into the release jar.
+    modImplementation "dev.isxander:yet-another-config-lib:3.8.1+1.21.11-fabric"
+    include          "dev.isxander:yet-another-config-lib:3.8.1+1.21.11-fabric"
+
+    // @ApiStatus.Internal markers and similar annotations. compileOnly so
+    // consumer mods don't transitively depend on jetbrains-annotations at
+    // runtime — the annotations are doc/IDE signals only.
+    compileOnly 'org.jetbrains:annotations:24.1.0'
+}
+
+loom {
+    runs {
+        client { ideConfigGenerated = false }
+        server { ideConfigGenerated = false }
+    }
+}
+
+jar {
+    from('LICENSE') { rename { "${it}_${project.name}" } }
+}
