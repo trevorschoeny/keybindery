@@ -11,7 +11,8 @@
     "keybindery.mixins.json"
   ],
   "entrypoints": {
-    "client": ["com.trevorschoeny.keybindery.KeybinderyClient"]
+    "client": ["com.trevorschoeny.keybindery.KeybinderyClient"],
+    "modmenu": ["com.trevorschoeny.keybindery.config.KeybinderyConfigModMenu"]
   },
   "depends": {
     "fabricloader": ">=0.15.0",
