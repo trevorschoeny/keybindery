@@ -1,7 +1,7 @@
 package com.trevorschoeny.keybindery.mixin;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.trevorschoeny.keybindery.chord.Chord;
+import com.trevorschoeny.keybindery.api.Chord;
 import com.trevorschoeny.keybindery.chord.ChordCapture;
 import com.trevorschoeny.keybindery.chord.ChordPressBuffer;
 import com.trevorschoeny.keybindery.chord.IChordKeyMapping;
@@ -79,7 +79,7 @@ public abstract class KeyMappingChordMixin implements IChordKeyMapping {
         if (simultaneous) {
             long windowMs = KeybinderyConfig.get().simultaneousWindowMs;
             long now = System.currentTimeMillis();
-            active = keybindery$chord.isActiveSimultaneous(ChordPressBuffer.get(), windowMs, now);
+            active = keybindery$chord.isActiveSimultaneous(k -> ChordPressBuffer.get().lastPress(k), windowMs, now);
         } else {
             long windowHandle = Minecraft.getInstance().getWindow().handle();
             active = keybindery$chord.isActiveHeld(windowHandle);
@@ -113,7 +113,7 @@ public abstract class KeyMappingChordMixin implements IChordKeyMapping {
             if (chord == null || chord.isUnbound() || chord.size() <= 1) continue;
 
             boolean active = simultaneous
-                    ? chord.isActiveSimultaneous(ChordPressBuffer.get(), windowMs, now)
+                    ? chord.isActiveSimultaneous(k -> ChordPressBuffer.get().lastPress(k), windowMs, now)
                     : chord.isActiveHeld(windowHandle);
 
             if (!active) {

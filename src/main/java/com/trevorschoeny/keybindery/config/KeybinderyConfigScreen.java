@@ -1,5 +1,7 @@
 package com.trevorschoeny.keybindery.config;
 
+import com.trevorschoeny.keybindery.KeybinderyClient;
+import com.trevorschoeny.keybindery.api.KeybinderyAPI;
 import dev.isxander.yacl3.api.ConfigCategory;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.OptionDescription;
@@ -70,12 +72,30 @@ public final class KeybinderyConfigScreen {
         // availability so the slider greys out / lights up accordingly.
         simultaneousOpt.addListener((opt, newValue) -> windowOpt.setAvailable(newValue));
 
+        // F1 demo entry — uses the F1 API to render a chord-bindable row.
+        // Lives in its own category so it's clearly a developer-facing demo,
+        // separated from end-user Chord Detection settings.
+        Option<?> f1DemoChord = KeybinderyAPI.getInstance().createYACLChordOption(
+                KeybinderyClient.F1_DEMO_CHORD,
+                Component.literal("F1 Demo Chord"),
+                OptionDescription.of(Component.literal(
+                        "Click to bind a multi-key chord using Keybindery's F1 " +
+                        "API. The same widget consumer mods get by calling " +
+                        "KeybinderyAPI.getInstance().createYACLChordOption(...).\n\n" +
+                        "When the chord fires in-game, Keybindery logs " +
+                        "\"F1 demo chord fired!\" — watch the launcher log " +
+                        "to see it in action.")));
+
         return YetAnotherConfigLib.createBuilder()
                 .title(Component.literal("Keybindery"))
                 .category(ConfigCategory.createBuilder()
                         .name(Component.literal("Chord Detection"))
                         .option(simultaneousOpt)
                         .option(windowOpt)
+                        .build())
+                .category(ConfigCategory.createBuilder()
+                        .name(Component.literal("F1 Demo"))
+                        .option(f1DemoChord)
                         .build())
                 .save(KeybinderyConfig::save)
                 .build()

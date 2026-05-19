@@ -1,6 +1,7 @@
 package com.trevorschoeny.keybindery.chord;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.trevorschoeny.keybindery.api.Chord;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.network.chat.Component;

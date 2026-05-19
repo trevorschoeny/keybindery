@@ -1,10 +1,16 @@
 package com.trevorschoeny.keybindery;
 
+import com.trevorschoeny.keybindery.api.KeybinderyAPIHolder;
+import com.trevorschoeny.keybindery.api.KeybinderyAPIImpl;
+import com.trevorschoeny.keybindery.chord.ChordPersistence;
 import com.trevorschoeny.keybindery.config.KeybinderyConfig;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import com.mojang.blaze3d.platform.InputConstants;
 import org.lwjgl.glfw.GLFW;
@@ -37,9 +43,26 @@ public class KeybinderyClient implements ClientModInitializer {
     /** The Simultaneous Mode toggle keybind. Default unbound — players opt in. */
     public static KeyMapping SIMULTANEOUS_MODE_TOGGLE;
 
+    /**
+     * F1 demo keybind. Bindable from Keybindery's own YACL config screen via
+     * {@link com.trevorschoeny.keybindery.api.KeybinderyAPI#createYACLChordOption}.
+     * Demonstrates the F1 API end-to-end — a YACL chord row that captures and
+     * applies a multi-key chord. Logs each time the chord fires so the player
+     * sees feedback. (Real consumer mods register their own keybinds and use
+     * F1 the same way; this one's just a live demo inside Keybindery itself.)
+     */
+    public static KeyMapping F1_DEMO_CHORD;
+
     @Override
     public void onInitializeClient() {
         KeybinderyConfig.load();
+
+        // F1 — install the real KeybinderyAPI implementation. Consumer mods
+        // calling KeybinderyAPI.getInstance() now get the live impl instead
+        // of the stub. Per Trev's silent-fail directive, this only happens
+        // when keybindery main is loaded; otherwise the stub remains and
+        // consumer code no-ops gracefully.
+        KeybinderyAPIHolder.install(new KeybinderyAPIImpl());
 
         SIMULTANEOUS_MODE_TOGGLE = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "key.keybindery.toggle_simultaneous_mode",
@@ -48,16 +71,43 @@ public class KeybinderyClient implements ClientModInitializer {
                 CATEGORY
         ));
 
+        F1_DEMO_CHORD = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+                "key.keybindery.f1_demo_chord",
+                InputConstants.Type.KEYSYM,
+                GLFW.GLFW_KEY_UNKNOWN,
+                CATEGORY
+        ));
+
+        // Apply persisted chord state from options.txt as soon as the
+        // client is fully started — after all mods' onInitializeClient
+        // ran and Fabric aggregated their keybinds into Options.keyMappings.
+        // Until this fires, OptionsChordPersistenceMixin.save no-ops so we
+        // don't wipe chord lines we haven't yet loaded into memory.
+        ClientLifecycleEvents.CLIENT_STARTED.register(client ->
+                ChordPersistence.applyChordsFromOptionsTxt(client.options));
+
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             // Drain the click queue. Each pending click flips the mode.
-            // consumeClick() returns true once per pending click; the loop
-            // handles rapid double-fires (rare in practice but correct).
             while (SIMULTANEOUS_MODE_TOGGLE.consumeClick()) {
                 KeybinderyConfig cfg = KeybinderyConfig.get();
                 cfg.simultaneousMode = !cfg.simultaneousMode;
                 KeybinderyConfig.save();
                 LOGGER.info("[Keybindery] Simultaneous Mode toggled {}",
                         cfg.simultaneousMode ? "ON" : "OFF");
+                if (client.player != null) {
+                    client.player.displayClientMessage(Component.literal(
+                            "[Keybindery] Simultaneous Mode: " + (cfg.simultaneousMode ? "ON" : "OFF")), true);
+                }
+            }
+            // F1 demo: log + action-bar message each time the demo chord
+            // fires so visible feedback proves end-to-end dispatch works
+            // without making the player open the launcher log.
+            while (F1_DEMO_CHORD.consumeClick()) {
+                LOGGER.info("[Keybindery] F1 demo chord fired!");
+                if (client.player != null) {
+                    client.player.displayClientMessage(Component.literal(
+                            "[Keybindery] F1 demo chord fired!"), true);
+                }
             }
         });
 

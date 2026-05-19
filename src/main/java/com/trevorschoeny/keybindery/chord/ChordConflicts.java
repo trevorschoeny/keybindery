@@ -1,5 +1,6 @@
 package com.trevorschoeny.keybindery.chord;
 
+import com.trevorschoeny.keybindery.api.Chord;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;

@@ -1,7 +1,7 @@
 package com.trevorschoeny.keybindery.mixin;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.trevorschoeny.keybindery.chord.Chord;
+import com.trevorschoeny.keybindery.api.Chord;
 import com.trevorschoeny.keybindery.chord.ChordCapture;
 import com.trevorschoeny.keybindery.chord.IChordKeyMapping;
 import net.minecraft.client.KeyMapping;

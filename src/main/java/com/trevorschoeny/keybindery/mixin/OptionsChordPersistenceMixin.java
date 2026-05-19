@@ -1,6 +1,7 @@
 package com.trevorschoeny.keybindery.mixin;
 
-import com.trevorschoeny.keybindery.chord.Chord;
+import com.trevorschoeny.keybindery.api.Chord;
+import com.trevorschoeny.keybindery.chord.ChordPersistence;
 import com.trevorschoeny.keybindery.chord.IChordKeyMapping;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -8,6 +9,7 @@ import net.minecraft.client.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -29,89 +31,101 @@ import java.util.stream.Stream;
  * Vanilla ignores unknown lines on load (no crash), so the additions are
  * forward-compatible with vanilla and other mods reading the same file.
  *
- * <p>Lifecycle:
+ * <h3>Two-phase save (preserve-across-save)</h3>
+ * Vanilla's {@code save()} completely rewrites {@code options.txt} — every
+ * line vanilla doesn't write is lost. If save fires before
+ * {@link ChordPersistence#applyChordsFromOptionsTxt} has run, the in-memory
+ * chord field is UNBOUND for everything, so writing fresh chord lines from
+ * memory would wipe persisted chord state.
+ *
+ * <p>To survive this, save uses a snapshot-and-restore pattern:
  * <ul>
- *   <li>{@link Options#save} TAIL — re-reads the file vanilla just wrote,
- *       strips any pre-existing {@code key_chord_*} lines (idempotency: each
- *       save rewrites our lines fresh, not append-duplicates), then writes
- *       back vanilla's lines + the current chord state.</li>
- *   <li>{@link Options#load} TAIL — reads the file, finds {@code key_chord_*}
- *       lines, deserializes the chord and applies via
- *       {@link IChordKeyMapping#updateFromChord} so the in-memory KeyMapping
- *       carries the chord. Vanilla has already populated the base key from
- *       its own {@code key_*} line by this point; our update overrides where
- *       needed.</li>
+ *   <li><b>HEAD inject:</b> reads existing {@code key_chord_*} lines from
+ *       {@code options.txt} BEFORE vanilla rewrites it. Snapshot stored on
+ *       the Options instance via {@code @Unique} field.</li>
+ *   <li><b>TAIL inject:</b> after vanilla wrote its content, our chord
+ *       lines need to be re-added.
+ *       <ul>
+ *         <li>If {@link ChordPersistence#appliedFromOptionsTxt} is true
+ *             (apply ran), write fresh chord lines from in-memory keymap
+ *             state — that's the canonical source of truth.</li>
+ *         <li>If false (save fired before apply, e.g., during Options
+ *             constructor), restore the HEAD snapshot — preserves chord
+ *             state we haven't yet loaded.</li>
+ *       </ul>
+ *   </li>
  * </ul>
  *
- * <p>Per §0003 (Keybindery canon): no {@code cancellable} here — both
- * injections are pure side-effect TAIL hooks, the safest mixin shape.
+ * <p>The load side (chord application from options.txt) is in
+ * {@link ChordPersistence#applyChordsFromOptionsTxt}, invoked from
+ * {@code KeybinderyClient} on {@code ClientLifecycleEvents.CLIENT_STARTED}
+ * (after Fabric mod init).
+ *
+ * <p>Per §0003 (Keybindery canon): no {@code cancellable} on either inject —
+ * both are pure side-effect hooks.
  */
 @Mixin(Options.class)
 public abstract class OptionsChordPersistenceMixin {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("keybindery");
 
-    private static final String CHORD_LINE_PREFIX = "key_chord_";
+    private static final String CHORD_LINE_PREFIX = ChordPersistence.CHORD_LINE_PREFIX;
+
+    /** Chord lines snapshotted from options.txt at save HEAD, used to
+     *  restore at save TAIL when apply hasn't run yet. */
+    @Unique
+    private List<String> keybindery$chordLinesSnapshot;
+
+    @Inject(method = "save", at = @At("HEAD"))
+    private void keybindery$snapshotChordLines(CallbackInfo ci) {
+        Path optionsFile = optionsFilePath();
+        keybindery$chordLinesSnapshot = new ArrayList<>();
+        if (optionsFile == null || !Files.exists(optionsFile)) return;
+        try (Stream<String> stream = Files.lines(optionsFile)) {
+            stream.filter(line -> line.startsWith(CHORD_LINE_PREFIX))
+                    .forEach(keybindery$chordLinesSnapshot::add);
+        } catch (IOException e) {
+            LOGGER.warn("[Keybindery] Failed to snapshot chord lines from {}: {}",
+                    optionsFile, e.getMessage());
+        }
+    }
 
     @Inject(method = "save", at = @At("TAIL"))
     private void keybindery$saveChordState(CallbackInfo ci) {
         Path optionsFile = optionsFilePath();
         if (optionsFile == null || !Files.exists(optionsFile)) return;
 
+        Options self = (Options) (Object) this;
+        if (self.keyMappings == null) return;
+
+        // Decide which chord lines to write back.
+        List<String> chordLinesToWrite;
+        if (ChordPersistence.appliedFromOptionsTxt) {
+            chordLinesToWrite = new ArrayList<>();
+            for (KeyMapping mapping : self.keyMappings) {
+                Chord chord = ((IChordKeyMapping) mapping).keybindery$getChord();
+                if (chord == null || chord.isUnbound() || chord.size() <= 1) continue;
+                chordLinesToWrite.add(CHORD_LINE_PREFIX + mapping.getName() + ":" + chord.serialize());
+            }
+        } else {
+            chordLinesToWrite = keybindery$chordLinesSnapshot != null
+                    ? keybindery$chordLinesSnapshot
+                    : new ArrayList<>();
+        }
+
         try {
-            // Read what vanilla wrote, strip our prior chord lines (idempotency).
+            // Read what vanilla wrote, strip any existing chord lines (so we
+            // don't duplicate), then append our chord lines.
             List<String> existing;
             try (Stream<String> stream = Files.lines(optionsFile)) {
                 existing = stream
                         .filter(line -> !line.startsWith(CHORD_LINE_PREFIX))
                         .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
             }
-
-            // Append fresh chord lines for every KeyMapping with a multi-key chord.
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.options != null && mc.options.keyMappings != null) {
-                for (KeyMapping mapping : mc.options.keyMappings) {
-                    Chord chord = ((IChordKeyMapping) mapping).keybindery$getChord();
-                    if (chord == null || chord.isUnbound() || chord.size() <= 1) continue;
-                    existing.add(CHORD_LINE_PREFIX + mapping.getName() + ":" + chord.serialize());
-                }
-            }
-
+            existing.addAll(chordLinesToWrite);
             Files.write(optionsFile, existing);
         } catch (IOException e) {
             LOGGER.warn("[Keybindery] Failed to persist chord state to {}: {}",
-                    optionsFile, e.getMessage());
-        }
-    }
-
-    @Inject(method = "load", at = @At("TAIL"))
-    private void keybindery$loadChordState(CallbackInfo ci) {
-        Path optionsFile = optionsFilePath();
-        if (optionsFile == null || !Files.exists(optionsFile)) return;
-
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.options == null || mc.options.keyMappings == null) return;
-
-        // Build a name → KeyMapping lookup once. KeyMapping names are unique
-        // by Fabric registration contract, so a flat map is safe.
-        java.util.Map<String, KeyMapping> byName = new java.util.HashMap<>();
-        for (KeyMapping m : mc.options.keyMappings) byName.put(m.getName(), m);
-
-        try (Stream<String> stream = Files.lines(optionsFile)) {
-            stream.forEach(line -> {
-                if (!line.startsWith(CHORD_LINE_PREFIX)) return;
-                int colon = line.indexOf(':');
-                if (colon < 0) return;
-                String name = line.substring(CHORD_LINE_PREFIX.length(), colon);
-                String serialized = line.substring(colon + 1);
-                KeyMapping mapping = byName.get(name);
-                if (mapping == null) return;
-                Chord chord = Chord.deserialize(serialized);
-                if (chord.isUnbound() || chord.size() <= 1) return;
-                IChordKeyMapping.updateFromChord(mapping, chord);
-            });
-        } catch (IOException e) {
-            LOGGER.warn("[Keybindery] Failed to load chord state from {}: {}",
                     optionsFile, e.getMessage());
         }
     }
