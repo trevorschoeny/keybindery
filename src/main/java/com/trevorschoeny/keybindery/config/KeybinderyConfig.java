@@ -49,6 +49,15 @@ public final class KeybinderyConfig {
     public boolean simultaneousMode = false;
     public int simultaneousWindowMs = 100;
 
+    /**
+     * Kill-switch for the F4 controls-screen overhaul. Default {@code false}
+     * (Keybindery replaces vanilla's {@link net.minecraft.client.gui.screens.options.controls.KeyBindsScreen}
+     * with its search/sort/filter-capable version). Set to {@code true} for
+     * users running Controlling alongside Keybindery who prefer Controlling's
+     * UX, or for players who just want vanilla's controls screen back.
+     */
+    public boolean disableControlsScreenReplacement = false;
+
     // ── Persistence ─────────────────────────────────────────────────────────
 
     public static void load() {

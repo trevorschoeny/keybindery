@@ -1,6 +1,7 @@
 package com.trevorschoeny.keybindery.api;
 
 import com.trevorschoeny.keybindery.chord.ChordController;
+import com.trevorschoeny.keybindery.chord.ClaimRegistry;
 import com.trevorschoeny.keybindery.chord.IChordKeyMapping;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.OptionDescription;
@@ -43,6 +44,9 @@ public final class KeybinderyAPIImpl implements KeybinderyAPI {
 
     @Override
     public Option<?> createYACLChordOption(KeyMapping mapping, Component label, OptionDescription description) {
+        // Using this widget claims the mapping for the consumer's own UI —
+        // auto-append (F2) will skip it elsewhere.
+        ClaimRegistry.mark(mapping);
         return Option.<Chord>createBuilder()
                 .name(label)
                 .description(description)
@@ -52,5 +56,15 @@ public final class KeybinderyAPIImpl implements KeybinderyAPI {
                         chord -> setChord(mapping, chord))
                 .customController(option -> new ChordController(option, mapping))
                 .build();
+    }
+
+    @Override
+    public void markClaimed(KeyMapping mapping) {
+        ClaimRegistry.mark(mapping);
+    }
+
+    @Override
+    public boolean isClaimed(KeyMapping mapping) {
+        return ClaimRegistry.isClaimed(mapping);
     }
 }

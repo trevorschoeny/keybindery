@@ -86,12 +86,31 @@ public final class KeybinderyConfigScreen {
                         "\"F1 demo chord fired!\" — watch the launcher log " +
                         "to see it in action.")));
 
+        Option<Boolean> disableControlsReplacement = Option.<Boolean>createBuilder()
+                .name(Component.literal("Disable controls-screen replacement"))
+                .description(OptionDescription.of(Component.literal(
+                        "When OFF (default): Keybindery replaces vanilla's controls " +
+                        "screen with its search/sort/filter version.\n\n" +
+                        "When ON: vanilla's plain controls screen is used. Useful if " +
+                        "you have Controlling installed and prefer its UX, or just " +
+                        "want vanilla back. Requires re-opening the screen to take " +
+                        "effect.")))
+                .binding(false,
+                        () -> cfg.disableControlsScreenReplacement,
+                        v -> cfg.disableControlsScreenReplacement = v)
+                .controller(BooleanControllerBuilder::create)
+                .build();
+
         return YetAnotherConfigLib.createBuilder()
                 .title(Component.literal("Keybindery"))
                 .category(ConfigCategory.createBuilder()
                         .name(Component.literal("Chord Detection"))
                         .option(simultaneousOpt)
                         .option(windowOpt)
+                        .build())
+                .category(ConfigCategory.createBuilder()
+                        .name(Component.literal("Controls Screen"))
+                        .option(disableControlsReplacement)
                         .build())
                 .category(ConfigCategory.createBuilder()
                         .name(Component.literal("F1 Demo"))

@@ -4,6 +4,7 @@ import com.trevorschoeny.keybindery.api.KeybinderyAPIHolder;
 import com.trevorschoeny.keybindery.api.KeybinderyAPIImpl;
 import com.trevorschoeny.keybindery.chord.ChordPersistence;
 import com.trevorschoeny.keybindery.config.KeybinderyConfig;
+import com.trevorschoeny.keybindery.screen.ControlsToolbarPanel;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -85,6 +86,12 @@ public class KeybinderyClient implements ClientModInitializer {
         // don't wipe chord lines we haven't yet loaded into memory.
         ClientLifecycleEvents.CLIENT_STARTED.register(client ->
                 ChordPersistence.applyChordsFromOptionsTxt(client.options));
+
+        // F4 — register the MK-hosted toolbar panel (chord-capture button +
+        // sort/filter dropdowns) onto Keybindery's controls screen. The
+        // vanilla EditBox for name search lives as a sibling renderable
+        // widget on the screen itself (see KeybinderyKeyBindsScreen.init).
+        ControlsToolbarPanel.install();
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             // Drain the click queue. Each pending click flips the mode.

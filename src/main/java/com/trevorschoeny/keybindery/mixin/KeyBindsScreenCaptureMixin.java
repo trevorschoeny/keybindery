@@ -78,23 +78,32 @@ public abstract class KeyBindsScreenCaptureMixin extends Screen {
     @Inject(method = "keyPressed(Lnet/minecraft/client/input/KeyEvent;)Z",
             at = @At("HEAD"), cancellable = true)
     private void keybindery$onKeyPressed(KeyEvent keyEvent, CallbackInfoReturnable<Boolean> cir) {
-        if (this.selectedKey == null) return;
-        if (keybindery$capture == null || !keybindery$capture.isCapturing()) {
+        // Row-bind flow: when vanilla has a row selected, lazily create the
+        // row-bind capture so the first key press starts capture.
+        if (this.selectedKey != null
+                && (keybindery$capture == null || !keybindery$capture.isCapturing())) {
             keybindery$capture = keybindery$createCapture();
             keybindery$capture.start();
             ChordCapture.activeMapping = this.selectedKey;
             ChordCapture.activeCapture = keybindery$capture;
         }
+        // Route to whatever capture is active — row-bind OR a toolbar widget
+        // (e.g. F4 Search Keybind button) that started its own capture.
+        ChordCapture active = ChordCapture.activeCapture;
+        if (active == null || !active.isCapturing()) return;
         InputConstants.Key key = InputConstants.getKey(keyEvent);
-        keybindery$capture.onKeyPressed(key);
-        if (this.keyBindsList != null) this.keyBindsList.refreshEntries();
+        active.onKeyPressed(key);
+        if (this.keyBindsList != null && ChordCapture.activeMapping != null) {
+            this.keyBindsList.refreshEntries();
+        }
         cir.setReturnValue(true);
     }
 
     public boolean keyReleased(KeyEvent keyEvent) {
-        if (keybindery$capture == null || !keybindery$capture.isCapturing()) return false;
+        ChordCapture active = ChordCapture.activeCapture;
+        if (active == null || !active.isCapturing()) return false;
         InputConstants.Key key = InputConstants.getKey(keyEvent);
-        keybindery$capture.onKeyReleased(key);
+        active.onKeyReleased(key);
         return true;
     }
 
@@ -102,23 +111,28 @@ public abstract class KeyBindsScreenCaptureMixin extends Screen {
             at = @At("HEAD"), cancellable = true)
     private void keybindery$onMouseClicked(MouseButtonEvent event, boolean doubleClick,
                                             CallbackInfoReturnable<Boolean> cir) {
-        if (this.selectedKey == null) return;
-        if (keybindery$capture == null || !keybindery$capture.isCapturing()) {
+        if (this.selectedKey != null
+                && (keybindery$capture == null || !keybindery$capture.isCapturing())) {
             keybindery$capture = keybindery$createCapture();
             keybindery$capture.start();
             ChordCapture.activeMapping = this.selectedKey;
             ChordCapture.activeCapture = keybindery$capture;
         }
+        ChordCapture active = ChordCapture.activeCapture;
+        if (active == null || !active.isCapturing()) return;
         InputConstants.Key key = InputConstants.Type.MOUSE.getOrCreate(event.button());
-        keybindery$capture.onMousePressed(key);
-        if (this.keyBindsList != null) this.keyBindsList.refreshEntries();
+        active.onMousePressed(key);
+        if (this.keyBindsList != null && ChordCapture.activeMapping != null) {
+            this.keyBindsList.refreshEntries();
+        }
         cir.setReturnValue(true);
     }
 
     public boolean mouseReleased(MouseButtonEvent event) {
-        if (keybindery$capture != null && keybindery$capture.isCapturing()) {
+        ChordCapture active = ChordCapture.activeCapture;
+        if (active != null && active.isCapturing()) {
             InputConstants.Key key = InputConstants.Type.MOUSE.getOrCreate(event.button());
-            keybindery$capture.onMouseReleased(key);
+            active.onMouseReleased(key);
             return true;
         }
         this.setDragging(false);
@@ -130,9 +144,10 @@ public abstract class KeyBindsScreenCaptureMixin extends Screen {
     @Inject(method = "render", at = @At("RETURN"))
     private void keybindery$pollReleases(GuiGraphics graphics, int mouseX, int mouseY,
                                           float partialTick, CallbackInfo ci) {
-        if (keybindery$capture != null && keybindery$capture.isCapturing()) {
+        ChordCapture active = ChordCapture.activeCapture;
+        if (active != null && active.isCapturing()) {
             long windowHandle = Minecraft.getInstance().getWindow().handle();
-            keybindery$capture.pollReleases(windowHandle);
+            active.pollReleases(windowHandle);
         }
     }
 }

@@ -1,0 +1,143 @@
+package com.trevorschoeny.keybindery.screen;
+
+import com.mojang.blaze3d.platform.InputConstants;
+import com.trevorschoeny.keybindery.api.Chord;
+import com.trevorschoeny.keybindery.chord.ChordCapture;
+import com.trevorschoeny.menukit.core.AbstractPanelElement;
+import com.trevorschoeny.menukit.core.PanelRendering;
+import com.trevorschoeny.menukit.core.PanelStyle;
+import com.trevorschoeny.menukit.core.RenderContext;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+import org.jspecify.annotations.Nullable;
+
+/**
+ * F4 toolbar "Search Keybind" — chord-capture button. Click to enter
+ * capture mode; press a chord; release to finalize. Right-click clears.
+ *
+ * <p>Reuses {@link ChordCapture} + {@code KeyBindsScreenCaptureMixin}'s
+ * key-routing path: when the button starts capture it sets
+ * {@code ChordCapture.activeCapture}; the mixin's HEAD-injects on
+ * {@code KeyBindsScreen.keyPressed/mouseClicked} forward all subsequent
+ * events to the active capture engine.
+ */
+public class SearchKeybindButton extends AbstractPanelElement {
+
+    private final int childX;
+    private final int childY;
+    private final int width;
+    private final int height;
+    private final Supplier<Chord> chordGetter;
+    private final Consumer<Chord> chordSetter;
+    private final Component placeholder;
+
+    private boolean hovered = false;
+    private ChordCapture capture;
+
+    public SearchKeybindButton(int childX, int childY, int width, int height,
+                                Supplier<Chord> chordGetter,
+                                Consumer<Chord> chordSetter,
+                                Component placeholder) {
+        this.childX = childX;
+        this.childY = childY;
+        this.width = width;
+        this.height = height;
+        this.chordGetter = chordGetter;
+        this.chordSetter = chordSetter;
+        this.placeholder = placeholder;
+    }
+
+    @Override public int getChildX() { return childX; }
+    @Override public int getChildY() { return childY; }
+    @Override public int getWidth() { return width; }
+    @Override public int getHeight() { return height; }
+
+    private boolean isCapturing() { return capture != null && capture.isCapturing(); }
+
+    @Override
+    public void render(RenderContext ctx) {
+        int sx = ctx.originX() + childX;
+        int sy = ctx.originY() + childY;
+        hovered = isHovered(ctx);
+
+        PanelStyle bg = isCapturing() ? PanelStyle.INSET : PanelStyle.RAISED;
+        PanelRendering.renderPanel(ctx.graphics(), sx, sy, width, height, bg);
+        if (hovered && !isCapturing()) {
+            ctx.graphics().fill(sx + 1, sy + 1, sx + width - 1, sy + height - 1, 0x30FFFFFF);
+        }
+
+        Component label = labelFor();
+        var font = Minecraft.getInstance().font;
+        int textWidth = font.width(label);
+        int textX = sx + Math.max(2, (width - textWidth) / 2);
+        int textY = sy + (height - font.lineHeight) / 2;
+        ctx.graphics().drawString(font, label, textX, textY, 0xFFFFFFFF, true);
+
+        // Hover-triggered tooltip — surfaces the right-click-to-clear hint
+        // (otherwise non-discoverable). Skip while capturing — the preview
+        // text is the user's feedback signal there.
+        @Nullable Supplier<Component> tt = getTooltipSupplier();
+        if (hovered && !isCapturing() && tt != null && ctx.hasMouseInput()) {
+            Component ttText = tt.get();
+            if (ttText != null) {
+                ctx.graphics().setTooltipForNextFrame(
+                        font, ttText, ctx.mouseX(), ctx.mouseY());
+            }
+        }
+    }
+
+    private Component labelFor() {
+        if (isCapturing()) return capture.getPreviewText();
+        Chord current = chordGetter.get();
+        if (current == null || current.isUnbound()) return placeholder;
+        return current.getDisplayName();
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 1) {
+            if (isCapturing()) stopCapture();
+            chordSetter.accept(Chord.UNBOUND);
+            return true;
+        }
+        if (button == 0) {
+            if (isCapturing()) {
+                capture.onMousePressed(InputConstants.Type.MOUSE.getOrCreate(0));
+            } else {
+                startCapture();
+            }
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (isCapturing()) {
+            capture.onMouseReleased(InputConstants.Type.MOUSE.getOrCreate(button));
+            return true;
+        }
+        return false;
+    }
+
+    private void startCapture() {
+        capture = new ChordCapture(
+                chord -> { chordSetter.accept(chord); stopCapture(); },
+                this::stopCapture,
+                () -> {},
+                () -> { chordSetter.accept(Chord.UNBOUND); stopCapture(); }
+        );
+        capture.start();
+        // No activeMapping — that's the row-bind flow's live-preview signal;
+        // toolbar search capture doesn't preview into a KeyMapping.
+        ChordCapture.activeCapture = capture;
+    }
+
+    private void stopCapture() {
+        if (ChordCapture.activeCapture == capture) ChordCapture.activeCapture = null;
+        capture = null;
+    }
+}

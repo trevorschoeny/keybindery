@@ -4,11 +4,15 @@
   "package": "com.trevorschoeny.keybindery.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
+    "KeyBindsScreenAccessor",
     "KeyBindsScreenCaptureMixin",
+    "KeyEntryConflictMixin",
     "KeyMappingAccessor",
     "KeyMappingChordMixin",
     "KeyboardChordPressMixin",
-    "OptionsChordPersistenceMixin"
+    "MinecraftSetScreenMixin",
+    "OptionsChordPersistenceMixin",
+    "OptionsSubScreenAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
