@@ -6,6 +6,7 @@ import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.utils.Dimension;
 import dev.isxander.yacl3.gui.AbstractWidget;
 import dev.isxander.yacl3.gui.YACLScreen;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.network.chat.Component;
 
@@ -42,7 +43,17 @@ public class ChordController implements Controller<Chord> {
         if (chord == null || chord.isUnbound()) {
             return Component.literal(">> click to bind <<");
         }
-        return chord.getDisplayName();
+        Component chordDisplay = chord.getDisplayName();
+        // Yellow-bracket conflict indicator — matches the vanilla KeyBindsList
+        // conflict rule (chord-aware via ChordConflicts: any-key overlap with
+        // another non-self mapping, suppressed when both are Mojang-default).
+        if (ChordConflicts.hasAnyConflict(mapping)) {
+            return Component.literal("[ ")
+                    .append(chordDisplay.copy().withStyle(ChatFormatting.WHITE))
+                    .append(" ]")
+                    .withStyle(ChatFormatting.YELLOW);
+        }
+        return chordDisplay;
     }
 
     @Override

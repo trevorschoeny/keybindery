@@ -30,12 +30,14 @@ import java.util.Set;
  * directive) — the conflict surface flags that the player needs to know
  * about the overlap.
  *
- * <p><b>Default-suppression rule (Trev 2026-05-24):</b> matches vanilla's
- * yellow-bracket behaviour. When BOTH mappings are at their original Mojang
- * defaults (vanilla {@code isDefault()} returns true on both), the overlap
- * is treated as Mojang-blessed and suppressed. The moment either side moves
- * off its default, the conflict surfaces. This mirrors what
- * {@code KeyBindsList$KeyEntry.refreshEntry} does for the bracket render.
+ * <p><b>Default-suppression rule (Trev 2026-05-24, refined same day):</b>
+ * matches Mojang's "intentional default overlap" semantics. Suppression
+ * fires only when BOTH mappings are VANILLA (translation key matches the
+ * two-segment {@code "key.<action>"} shape) AND both are at their Mojang
+ * default. Mod-default collisions are NOT Mojang-blessed (mod authors
+ * picked their defaults without knowing vanilla's), so a mod-vs-vanilla or
+ * mod-vs-mod default-collision (e.g. IP's "S" vs vanilla walk-back "S")
+ * still shows as a conflict.
  */
 public final class ChordConflicts {
 
@@ -67,8 +69,11 @@ public final class ChordConflicts {
             if (otherChord.isUnbound()) continue;
             Set<InputConstants.Key> shared = intersection(chord.getKeys(), otherChord.getKeys());
             if (shared.isEmpty()) continue;
-            // Both at Mojang default → suppress per the yellow-bracket rule.
-            if (exclude != null && exclude.isDefault() && km.isDefault()) continue;
+            // Both VANILLA and both at default → Mojang-blessed overlap; suppress.
+            // (Mod defaults aren't Mojang-blessed, so a mod-vs-vanilla default
+            //  collision still surfaces as a conflict.)
+            if (exclude != null && isVanilla(exclude) && exclude.isDefault()
+                                && isVanilla(km)      && km.isDefault()) continue;
             String label = Component.translatable(km.getName()).getString();
             String category = km.getCategory().label().getString();
             conflicts.add(new Conflict(km, label, category, shared));
@@ -119,5 +124,17 @@ public final class ChordConflicts {
         Set<InputConstants.Key> out = new LinkedHashSet<>();
         for (InputConstants.Key k : a) if (b.contains(k)) out.add(k);
         return out;
+    }
+
+    /**
+     * Returns true if {@code km} is a vanilla (Mojang-shipped) keymapping —
+     * identified by the two-segment {@code "key.<action>"} translation key
+     * shape vanilla uses for everything in {@code Options}. Modded mappings
+     * use three-segment {@code "key.<modid>.<action>"} per Fabric convention.
+     */
+    public static boolean isVanilla(KeyMapping km) {
+        String name = km.getName();
+        if (name == null || !name.startsWith("key.")) return false;
+        return name.indexOf('.', 4) == -1;
     }
 }

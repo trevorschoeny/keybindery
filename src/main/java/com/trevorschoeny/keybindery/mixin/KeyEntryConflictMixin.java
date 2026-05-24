@@ -40,4 +40,37 @@ public abstract class KeyEntryConflictMixin {
     private boolean keybindery$chordAwareSame(KeyMapping self, KeyMapping other) {
         return ChordConflicts.hasAnyOverlap(self, other);
     }
+
+    // Vanilla's conflict-suppression line is:
+    //   if (... && this.key.same(km) && (!km.isDefault() || !this.key.isDefault())) { ... }
+    // The both-at-default suppression there is supposed to be "Mojang-blessed
+    // intentional overlap." But vanilla's `isDefault()` returns true for any
+    // mapping at its OWN default — including a mod that happened to ship its
+    // default at the same key vanilla uses. Trev's example: IP keybind defaults
+    // to S; vanilla walk-back defaults to S. Both isDefault → vanilla suppresses,
+    // even though Mojang didn't bless that overlap (the mod chose S unilaterally).
+    //
+    // Fix: redirect the two isDefault() calls inside the loop condition so they
+    // only treat a mapping as "at default" when it's actually a VANILLA mapping.
+    // Mod-default mappings get false, which makes vanilla's (!a || !b) check
+    // trivially pass and the conflict surfaces.
+    //
+    // ordinal=0 is the resetButton.active call earlier in the method — left
+    // alone so reset still disables correctly on mod-default-bound mappings.
+
+    @Redirect(method = "refreshEntry",
+            at = @At(value = "INVOKE",
+                     target = "Lnet/minecraft/client/KeyMapping;isDefault()Z",
+                     ordinal = 1))
+    private boolean keybindery$vanillaOnlyDefault_other(KeyMapping other) {
+        return ChordConflicts.isVanilla(other) && other.isDefault();
+    }
+
+    @Redirect(method = "refreshEntry",
+            at = @At(value = "INVOKE",
+                     target = "Lnet/minecraft/client/KeyMapping;isDefault()Z",
+                     ordinal = 2))
+    private boolean keybindery$vanillaOnlyDefault_self(KeyMapping self) {
+        return ChordConflicts.isVanilla(self) && self.isDefault();
+    }
 }

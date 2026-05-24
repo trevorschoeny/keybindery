@@ -5,12 +5,12 @@ import com.trevorschoeny.keybindery.api.KeybinderyAPIImpl;
 import com.trevorschoeny.keybindery.chord.ChordPersistence;
 import com.trevorschoeny.keybindery.config.KeybinderyConfig;
 import com.trevorschoeny.keybindery.screen.ControlsToolbarPanel;
+import com.trevorschoeny.keybindery.screen.ModKeybindsOverlayPanel;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -92,6 +92,17 @@ public class KeybinderyClient implements ClientModInitializer {
         // vanilla EditBox for name search lives as a sibling renderable
         // widget on the screen itself (see KeybinderyKeyBindsScreen.init).
         ControlsToolbarPanel.install();
+
+        // F2 — auto-list mod keybinds on ModMenu-launched config screens.
+        // Two complementary surfaces:
+        //  • YACL screens get a native "Keybinds" tab injected at YACL
+        //    Builder.build() HEAD (see YACLBuilderInjectMixin).
+        //  • Non-YACL screens get a top-right MK overlay button that opens
+        //    ModKeybindsModalScreen with that mod's keymappings.
+        // Both gate on ModConfigKeybindsRegistry's (modId → screen) lookup,
+        // populated by ModMenuConfigScreenMixin. YACL screens fall back to
+        // stack-walking when ModMenu is absent.
+        ModKeybindsOverlayPanel.install();
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             // Drain the click queue. Each pending click flips the mode.
