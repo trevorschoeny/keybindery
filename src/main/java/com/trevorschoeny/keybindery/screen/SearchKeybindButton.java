@@ -4,11 +4,11 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.trevorschoeny.keybindery.api.Chord;
 import com.trevorschoeny.keybindery.chord.ChordCapture;
 import com.trevorschoeny.menukit.core.AbstractPanelElement;
-import com.trevorschoeny.menukit.core.PanelRendering;
-import com.trevorschoeny.menukit.core.PanelStyle;
 import com.trevorschoeny.menukit.core.RenderContext;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -57,17 +57,29 @@ public class SearchKeybindButton extends AbstractPanelElement {
 
     private boolean isCapturing() { return capture != null && capture.isCapturing(); }
 
+    /** Vanilla button sprite atlas — matches the look of MK widgets that
+     *  opt into {@code ControlStyle.VANILLA} (the Sort/Filter dropdowns).
+     *  Capturing uses {@code widget/button_disabled} (vanilla's darker
+     *  uniform gray) to visually distinguish active-but-not-clickable. */
+    private static final Identifier SPRITE_NORMAL =
+            Identifier.withDefaultNamespace("widget/button");
+    private static final Identifier SPRITE_HIGHLIGHTED =
+            Identifier.withDefaultNamespace("widget/button_highlighted");
+    private static final Identifier SPRITE_CAPTURING =
+            Identifier.withDefaultNamespace("widget/button_disabled");
+
     @Override
     public void render(RenderContext ctx) {
         int sx = ctx.originX() + childX;
         int sy = ctx.originY() + childY;
         hovered = isHovered(ctx);
 
-        PanelStyle bg = isCapturing() ? PanelStyle.INSET : PanelStyle.RAISED;
-        PanelRendering.renderPanel(ctx.graphics(), sx, sy, width, height, bg);
-        if (hovered && !isCapturing()) {
-            ctx.graphics().fill(sx + 1, sy + 1, sx + width - 1, sy + height - 1, 0x30FFFFFF);
-        }
+        Identifier sprite;
+        if (isCapturing()) sprite = SPRITE_CAPTURING;
+        else if (hovered) sprite = SPRITE_HIGHLIGHTED;
+        else sprite = SPRITE_NORMAL;
+        ctx.graphics().blitSprite(RenderPipelines.GUI_TEXTURED, sprite,
+                sx, sy, width, height);
 
         Component label = labelFor();
         var font = Minecraft.getInstance().font;
@@ -124,11 +136,20 @@ public class SearchKeybindButton extends AbstractPanelElement {
     }
 
     private void startCapture() {
+        // ESC and Delete/Backspace during a search-keybind capture both
+        // CLEAR the chord — the user pressed the abort key, the natural
+        // intent for a search field is "drop this filter," not "keep the
+        // last value." Different from row-bind semantics (row-bind onCancel
+        // preserves the previous binding so a misclick doesn't wipe it).
+        Runnable clearAndStop = () -> {
+            chordSetter.accept(Chord.UNBOUND);
+            stopCapture();
+        };
         capture = new ChordCapture(
                 chord -> { chordSetter.accept(chord); stopCapture(); },
-                this::stopCapture,
+                clearAndStop,
                 () -> {},
-                () -> { chordSetter.accept(Chord.UNBOUND); stopCapture(); }
+                clearAndStop
         );
         capture.start();
         // No activeMapping — that's the row-bind flow's live-preview signal;

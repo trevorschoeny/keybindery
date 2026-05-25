@@ -3,5 +3,7 @@
   "key.keybindery.f1_demo_chord": "F1 Demo Chord",
   "key.categories.keybindery": "Keybindery",
   "key.keybindery.unbound": "Unbound",
-  "key.keybindery.conflicts_header": "Conflicts with:"
+  "key.keybindery.conflicts_header": "Conflicts with:",
+  "keybindery.tooltip.show_conflicts": "Show Conflicts",
+  "keybindery.tooltip.reset_to_default": "Reset to Default"
 }

@@ -37,15 +37,29 @@ public interface IChordKeyMapping {
     /**
      * Returns the effective chord for the given mapping. If a multi-key chord
      * has been set via the duck interface, returns that. Otherwise wraps the
-     * mapping's single vanilla key as a one-key {@link Chord}.
+     * mapping's single vanilla key as a one-key {@link Chord}, preserving the
+     * original {@link InputConstants.Type} (KEYSYM, MOUSE, or SCANCODE).
+     *
+     * <p>Type preservation matters: {@code Chord.ofKey(int)} always assumes
+     * KEYSYM type, which would coerce a MOUSE binding (left=0, right=1,
+     * middle=2) into a KEYSYM key with the same value. Vanilla's name
+     * fallback for those unknown KEYSYM values collides with the digit
+     * keys' names, producing spurious conflicts (Trev 2026-05-24 — left
+     * mouse vs hotbar 1, etc.). Wrapping the actual {@code Key} keeps the
+     * Type intact so the chord's name-based comparator distinguishes them.
      */
     static Chord getChord(KeyMapping mapping) {
         Chord chord = ((IChordKeyMapping) mapping).keybindery$getChord();
         if (chord != null && !chord.isUnbound()) return chord;
         if (mapping.isUnbound()) return Chord.UNBOUND;
-        int keyCode = getKeyCode(mapping);
-        if (keyCode == InputConstants.UNKNOWN.getValue()) return Chord.UNBOUND;
-        return Chord.ofKey(keyCode);
+        InputConstants.Key key;
+        try {
+            key = InputConstants.getKey(mapping.saveString());
+        } catch (Exception e) {
+            return Chord.UNBOUND;
+        }
+        if (key.equals(InputConstants.UNKNOWN)) return Chord.UNBOUND;
+        return new Chord(java.util.Set.of(key));
     }
 
     /**
@@ -58,9 +72,12 @@ public interface IChordKeyMapping {
             mapping.setKey(InputConstants.UNKNOWN);
             ((IChordKeyMapping) mapping).keybindery$setChord(Chord.UNBOUND);
         } else {
-            int baseKey = chord.primaryKeyCode();
-            if (baseKey == -1) mapping.setKey(InputConstants.UNKNOWN);
-            else mapping.setKey(InputConstants.Type.KEYSYM.getOrCreate(baseKey));
+            // Use primaryKey() — preserves InputConstants.Type so a chord
+            // whose primary is a MOUSE button stays MOUSE on the underlying
+            // KeyMapping (and serializes as e.g. key.mouse.left, not
+            // key.keyboard.0). The earlier path built KEYSYM from the
+            // int code and silently downgraded mouse bindings.
+            mapping.setKey(chord.primaryKey());
             ((IChordKeyMapping) mapping).keybindery$setChord(chord);
         }
         KeyMapping.resetMapping();

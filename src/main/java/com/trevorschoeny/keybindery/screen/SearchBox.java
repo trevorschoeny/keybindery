@@ -10,6 +10,7 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * F4 toolbar search field — wraps vanilla {@link EditBox} as an MK
@@ -31,6 +32,11 @@ public class SearchBox extends AbstractPanelElement {
     private final int height;
     private final Component hint;
     private final Consumer<String> responder;
+    /** Optional lens for the EditBox's value at each attach — lets the
+     *  search box reflect a filter set externally (e.g. by
+     *  {@code openWithModFilterFor} populating the underlying list's
+     *  search query before the screen opens). Null = no auto-populate. */
+    private final @Nullable Supplier<String> initialValueSupplier;
 
     // Lazily constructed in onAttach — see the note there for why we can't
     // construct it eagerly in the SearchBox constructor.
@@ -39,12 +45,19 @@ public class SearchBox extends AbstractPanelElement {
 
     public SearchBox(int childX, int childY, int width, int height,
                       Component hint, Consumer<String> responder) {
+        this(childX, childY, width, height, hint, responder, null);
+    }
+
+    public SearchBox(int childX, int childY, int width, int height,
+                      Component hint, Consumer<String> responder,
+                      @Nullable Supplier<String> initialValueSupplier) {
         this.childX = childX;
         this.childY = childY;
         this.width = width;
         this.height = height;
         this.hint = hint;
         this.responder = responder;
+        this.initialValueSupplier = initialValueSupplier;
     }
 
     @Override public int getChildX() { return childX; }
@@ -102,6 +115,17 @@ public class SearchBox extends AbstractPanelElement {
         // no separate addRenderableWidget call needed (we render manually
         // in render() so the EditBox draws AFTER the panel background).
         MKFocus.addWidget(screen, editBox);
+
+        // Populate the EditBox from the lens on every attach — the screen
+        // (e.g. via openWithModFilterFor / openWithConflictsFilterFor)
+        // pre-set the underlying list's search state before opening, so
+        // the visible search box now reflects that. Triggers the
+        // responder, which is a no-op when the list's query already
+        // equals the supplier's value (setSearchQuery dedups).
+        if (initialValueSupplier != null) {
+            String value = initialValueSupplier.get();
+            editBox.setValue(value == null ? "" : value);
+        }
     }
 
     @Override

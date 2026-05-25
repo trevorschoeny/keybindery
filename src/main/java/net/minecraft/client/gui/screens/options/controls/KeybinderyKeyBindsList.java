@@ -47,41 +47,53 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
 
     public KeybinderyKeyBindsList(KeyBindsScreen screen, Minecraft mc) {
         super(screen, mc);
+        // Default 20px row height — KeybinderyKeyEntry uses a one-row
+        // layout (name on left, chord + Conflicts/Reset icons on right)
+        // so vanilla's height is correct.
     }
 
-    // ── Filter/sort state setters (refresh on change) ───────────────────────
+    // ── Filter/sort state setters (refresh + scroll-to-top on change) ──────
 
     public void setSearchQuery(String query) {
         if (query == null) query = "";
         if (this.searchQuery.equals(query)) return;
         this.searchQuery = query.toLowerCase();
-        refreshEntries();
+        refreshAndScrollToTop();
     }
 
     public void setSortOrder(SortOrder order) {
         if (order == null) order = SortOrder.BY_CATEGORY;
         if (this.sortOrder == order) return;
         this.sortOrder = order;
-        refreshEntries();
+        refreshAndScrollToTop();
     }
 
     public void setRowFilter(RowFilter filter) {
         if (filter == null) filter = RowFilter.NONE;
         if (this.rowFilter == filter) return;
         this.rowFilter = filter;
-        refreshEntries();
+        refreshAndScrollToTop();
     }
 
     public void setSearchChordKeys(Set<InputConstants.Key> keys) {
         this.searchChordKeys.clear();
         if (keys != null) this.searchChordKeys.addAll(keys);
-        refreshEntries();
+        refreshAndScrollToTop();
     }
 
     public void clearSearchChordKeys() {
         if (this.searchChordKeys.isEmpty()) return;
         this.searchChordKeys.clear();
+        refreshAndScrollToTop();
+    }
+
+    /** Filter/sort change just changed what rows the user sees — keeping
+     *  their old scroll offset would leave them looking at the middle of
+     *  a possibly-shorter (or differently-ordered) list. Reset to top so
+     *  the new filter result is immediately visible. */
+    private void refreshAndScrollToTop() {
         refreshEntries();
+        setScrollAmount(0);
     }
 
     public Set<InputConstants.Key> getSearchChordKeys() {
@@ -251,7 +263,8 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
 
     private void addKeyEntry(KeyMapping km) {
         Component name = Component.translatable(km.getName());
-        addEntry(new KeyEntry(km, name));
+        // Default 20px row height — KeybinderyKeyEntry is one row.
+        addEntry(new KeybinderyKeyEntry(this, km, name));
     }
 
     /**

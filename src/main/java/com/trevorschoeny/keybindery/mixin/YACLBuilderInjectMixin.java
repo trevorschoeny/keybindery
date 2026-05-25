@@ -4,10 +4,13 @@ import com.trevorschoeny.keybindery.api.Chord;
 import com.trevorschoeny.keybindery.chord.ChordController;
 import com.trevorschoeny.keybindery.chord.IChordKeyMapping;
 import com.trevorschoeny.keybindery.screen.CurrentModContext;
+import com.trevorschoeny.keybindery.screen.KeybinderyKeyBindsScreen;
 import com.trevorschoeny.keybindery.screen.ModConfigKeybindsRegistry;
+import dev.isxander.yacl3.api.ButtonOption;
 import dev.isxander.yacl3.api.ConfigCategory;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.YetAnotherConfigLib;
+import net.minecraft.client.Minecraft;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.KeyMapping;
@@ -101,19 +104,45 @@ public abstract class YACLBuilderInjectMixin {
 
     @Unique
     private static ConfigCategory keybindery$buildKeybindsCategory(List<KeyMapping> mappings) {
+        // Capture the mod-id at build-time so the "Open Keybind Menu" button
+        // at the bottom can open the controls screen pre-filtered to this
+        // mod. The same value drove the keymapping list, so it's correct.
+        final String modId = CurrentModContext.get();
+
         ConfigCategory.Builder catBuilder = ConfigCategory.createBuilder()
                 .name(Component.literal("Keybinds"));
         for (KeyMapping km : mappings) {
-            Option<Chord> opt = Option.<Chord>createBuilder()
+            // One row per keymapping: name on the left (YACL renders it
+            // from the Option's name), chord button + Conflicts + Reset
+            // icons clustered on the right (rendered by ChordControllerWidget).
+            // The chord button widget shrank when Conflicts/Reset became
+            // icons, so the whole row now fits comfortably on one line.
+            catBuilder.option(Option.<Chord>createBuilder()
                     .name(Component.translatable(km.getName()))
                     .binding(
                             Chord.UNBOUND,
                             () -> IChordKeyMapping.getChord(km),
                             chord -> IChordKeyMapping.updateFromChord(km, chord))
                     .customController(option -> new ChordController(option, km))
-                    .build();
-            catBuilder.option(opt);
+                    .build());
         }
+        // Escape-hatch button at the end of the tab — opens the full
+        // controls screen (no filter). Per Trev (2026-05-24), this isn't
+        // mod-scoped: the user is already viewing this mod's keybinds in
+        // the tab, so clicking through to the menu means they want to see
+        // EVERYTHING and search/filter from there.
+        //
+        // Standard YACL ButtonOption — label on the left, button verb on
+        // the right.
+        catBuilder.option(ButtonOption.createBuilder()
+                .name(Component.literal("Keybind Menu"))
+                .text(Component.literal("Open"))
+                .action((screen, opt) -> {
+                    Minecraft mc = Minecraft.getInstance();
+                    mc.setScreen(new com.trevorschoeny.keybindery.screen.KeybinderyKeyBindsScreen(
+                            mc.screen, mc.options));
+                })
+                .build());
         return catBuilder.build();
     }
 }

@@ -3,12 +3,16 @@ package com.trevorschoeny.keybindery.api;
 import com.trevorschoeny.keybindery.chord.ChordController;
 import com.trevorschoeny.keybindery.chord.ClaimRegistry;
 import com.trevorschoeny.keybindery.chord.IChordKeyMapping;
+import dev.isxander.yacl3.api.LabelOption;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.OptionDescription;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.ApiStatus;
+
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Real {@link KeybinderyAPI} implementation, registered by keybindery main
@@ -43,19 +47,24 @@ public final class KeybinderyAPIImpl implements KeybinderyAPI {
     }
 
     @Override
-    public Option<?> createYACLChordOption(KeyMapping mapping, Component label, OptionDescription description) {
+    public Collection<? extends Option<?>> createYACLChordOption(KeyMapping mapping, Component label, OptionDescription description) {
         // Using this widget claims the mapping for the consumer's own UI —
         // auto-append (F2) will skip it elsewhere.
         ClaimRegistry.mark(mapping);
-        return Option.<Chord>createBuilder()
-                .name(label)
-                .description(description)
-                .binding(
-                        Chord.UNBOUND,
-                        () -> getChord(mapping),
-                        chord -> setChord(mapping, chord))
-                .customController(option -> new ChordController(option, mapping))
-                .build();
+        // Two-row layout — label on top, three buttons below. See javadoc
+        // on KeybinderyAPI#createYACLChordOption for why the API returns
+        // a collection instead of a single Option.
+        return List.of(
+                LabelOption.create(label),
+                Option.<Chord>createBuilder()
+                        .name(Component.empty())
+                        .description(description)
+                        .binding(
+                                Chord.UNBOUND,
+                                () -> getChord(mapping),
+                                chord -> setChord(mapping, chord))
+                        .customController(option -> new ChordController(option, mapping))
+                        .build());
     }
 
     @Override

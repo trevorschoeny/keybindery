@@ -1,6 +1,7 @@
 package com.trevorschoeny.keybindery.screen;
 
 import com.trevorschoeny.keybindery.api.Chord;
+import com.trevorschoeny.menukit.core.ControlStyle;
 import com.trevorschoeny.menukit.core.Dropdown;
 import com.trevorschoeny.menukit.core.Panel;
 import com.trevorschoeny.menukit.core.PanelElement;
@@ -33,8 +34,10 @@ public final class ControlsToolbarPanel {
 
     // ── Layout constants ─────────────────────────────────────────────────
 
-    /** Y of row 1 inside the panel (clears the vanilla title at ~y=16). */
-    private static final int ROW1_Y = 24;
+    /** Y of row 1 inside the panel. Sits close to the panel top — the
+     *  vanilla title that this used to clear at y≈16 is now suppressed
+     *  by {@code KeybinderyKeyBindsScreen.addTitle}, so we can pull up. */
+    private static final int ROW1_Y = 4;
     /** Y of row 2 inside the panel. Row 1 + element height + gap. */
     private static final int ROW2_Y = ROW1_Y + 20 + 4;
     /** Element height — search box, chord button, dropdowns share. */
@@ -67,6 +70,14 @@ public final class ControlsToolbarPanel {
                 query -> {
                     KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();
                     if (l != null) l.setSearchQuery(query);
+                },
+                // Lens — populate the visible field from the list's current
+                // searchQuery on every screen attach. Lets openWithModFilterFor
+                // pre-fill the box so the user can backspace it to see all
+                // keybinds.
+                () -> {
+                    KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();
+                    return l != null ? l.getSearchQuery() : "";
                 });
 
         SearchKeybindButton chordBtn = new SearchKeybindButton(
@@ -93,6 +104,7 @@ public final class ControlsToolbarPanel {
                 .label(SortOrder::display)
                 .selection(ControlsToolbarPanel::getSortOrder,
                            ControlsToolbarPanel::setSortOrder)
+                .style(ControlStyle.VANILLA)
                 .build();
 
         TextLabel filterLabel = new TextLabel(
@@ -107,6 +119,7 @@ public final class ControlsToolbarPanel {
                 .label(RowFilter::display)
                 .selection(ControlsToolbarPanel::getRowFilter,
                            ControlsToolbarPanel::setRowFilter)
+                .style(ControlStyle.VANILLA)
                 .build();
 
         // Dropdowns declared last (render-order discipline — popovers paint

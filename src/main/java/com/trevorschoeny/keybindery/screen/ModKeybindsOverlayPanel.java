@@ -48,8 +48,7 @@ public final class ModKeybindsOverlayPanel {
                     if (current == null) return;
                     String modId = ModConfigKeybindsRegistry.modIdFor(current);
                     if (modId == null) return;
-                    Minecraft.getInstance().setScreen(
-                            ModKeybindsModalScreen.open(modId, current));
+                    KeybinderyKeyBindsScreen.openWithModFilterFor(modId, current);
                 });
 
         Panel panel = new Panel(

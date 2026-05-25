@@ -75,7 +75,7 @@ public final class KeybinderyConfigScreen {
         // F1 demo entry — uses the F1 API to render a chord-bindable row.
         // Lives in its own category so it's clearly a developer-facing demo,
         // separated from end-user Chord Detection settings.
-        Option<?> f1DemoChord = KeybinderyAPI.getInstance().createYACLChordOption(
+        java.util.Collection<? extends Option<?>> f1DemoChord = KeybinderyAPI.getInstance().createYACLChordOption(
                 KeybinderyClient.F1_DEMO_CHORD,
                 Component.literal("F1 Demo Chord"),
                 OptionDescription.of(Component.literal(
@@ -114,7 +114,7 @@ public final class KeybinderyConfigScreen {
                         .build())
                 .category(ConfigCategory.createBuilder()
                         .name(Component.literal("F1 Demo"))
-                        .option(f1DemoChord)
+                        .options(f1DemoChord)
                         .build())
                 .save(KeybinderyConfig::save)
                 .build()

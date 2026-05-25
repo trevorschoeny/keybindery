@@ -11,17 +11,16 @@ import java.util.WeakHashMap;
 
 /**
  * Per-screen registry tracking which mod's config screen is currently open
- * + which mod's keybinds the modal should display when invoked.
+ * so the overlay button can resolve the mod-id at click time.
  *
  * <p>Populated by {@link com.trevorschoeny.keybindery.mixin.ModMenuConfigScreenMixin}:
  * every time ModMenu opens a config screen via {@code getConfigScreen(modId, parent)},
  * the returned Screen is mapped to its modId here. Weak keys — when the screen
  * is GC'd, the entry vanishes automatically.
  *
- * <p>The modal opens via {@link #openFor(String)} (called from the top-right
- * "Keybinds" button) and closes via {@link #close()}. Modal visibility is
- * supplier-driven (MenuKit §0026 — elements are lenses, not stores) — the
- * modal panel reads {@link #isOpen()} every frame.
+ * <p>The modal-state helpers (openFor/close/isOpen/activeModId) were removed
+ * in Section 5 when the modal flow was replaced with direct navigation to
+ * {@link KeybinderyKeyBindsScreen#openWithModFilterFor}.
  */
 public final class ModConfigKeybindsRegistry {
 
@@ -29,9 +28,6 @@ public final class ModConfigKeybindsRegistry {
 
     /** Screens whose mod-id is known (because they came from ModMenu). */
     private static final WeakHashMap<Screen, String> SCREEN_TO_MOD = new WeakHashMap<>();
-
-    /** Active modal state. Null when closed. */
-    private static @Nullable String activeModId = null;
 
     // ── Mixin entry points ─────────────────────────────────────────────────
 
@@ -44,20 +40,15 @@ public final class ModConfigKeybindsRegistry {
         return screen == null ? null : SCREEN_TO_MOD.get(screen);
     }
 
-    // ── Modal state ────────────────────────────────────────────────────────
-
-    public static void openFor(String modId) { activeModId = modId; }
-    public static void close() { activeModId = null; }
-    public static boolean isOpen() { return activeModId != null; }
-    public static @Nullable String activeModId() { return activeModId; }
-
     // ── Keybind lookup ─────────────────────────────────────────────────────
 
     /**
      * Returns the keymappings belonging to {@code modId}, identified by
-     * translation-key prefix {@code key.<modId>.*}. Includes claimed mappings
-     * — per Trev (2026-05-24), the modal lists EVERY keybind for the mod
-     * regardless of whether the mod's own config UI already surfaces them.
+     * translation-key prefix {@code key.<modId>.*}. Includes claimed
+     * mappings — per Trev (2026-05-24), surfaces list EVERY keybind for
+     * the mod regardless of whether the mod's own config UI already
+     * exposes them. Used by {@link com.trevorschoeny.keybindery.mixin.YACLBuilderInjectMixin}
+     * to gate auto-tab injection.
      */
     public static List<KeyMapping> keybindsFor(String modId) {
         List<KeyMapping> out = new ArrayList<>();
