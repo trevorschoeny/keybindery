@@ -57,7 +57,8 @@ public final class ControlsToolbarPanel {
     private static final int FILTER_LABEL_X = SORT_X + SORT_W + 12;
     private static final int FILTER_X = FILTER_LABEL_X + 34; // after "Filter:" label
 
-    /** Total outer width (mirrored as {@link KeybinderyKeyBindsScreen#PANEL_WIDTH}). */
+    /** Total outer width — derived from row-1 element widths since that's
+     *  the wider of the two rows. Used implicitly by MK's panel layout. */
     static final int PANEL_WIDTH = CHORD_BTN_X + CHORD_BTN_W;
 
     /** Constructs the panel + adapter and registers it with MK. Call once
@@ -122,9 +123,10 @@ public final class ControlsToolbarPanel {
                 .style(ControlStyle.VANILLA)
                 .build();
 
-        // Dropdowns declared last (render-order discipline — popovers paint
-        // above earlier elements). filterDropdown after sortDropdown so its
-        // popover wins z-order if they ever overlap (they don't in practice).
+        // MK 18t made declaration order arbitrary — PanelDispatch runs a
+        // second renderOverlay pass for popovers, so they always paint on
+        // top regardless of sibling order. Order here is reader-friendly:
+        // row 1 first, row 2 left-to-right.
         Panel toolbar = new Panel(
                 "keybindery-controls-toolbar",
                 List.<PanelElement>of(searchBox, chordBtn,

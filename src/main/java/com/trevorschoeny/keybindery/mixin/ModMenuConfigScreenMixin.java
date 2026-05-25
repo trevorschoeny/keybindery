@@ -18,10 +18,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  *
  * <p>Soft-dep — ModMenu is {@code modCompileOnly}. If a player runs without
  * ModMenu, this mixin's target class is missing and the mixin is silently
- * skipped (Fabric mixin's standard behavior for absent classes). Keybindery's
- * modal still works for any other code path that calls
- * {@link ModConfigKeybindsRegistry#recordConfigScreen} — though none exist
- * today; ModMenu is the only entry point.
+ * skipped (Fabric mixin's standard behavior for absent classes). The
+ * registry stays empty in that case; the overlay-button + YACL stack-walk
+ * fallback still surface keybinds via their own discovery paths.
  *
  * <p>Precise injection per §0030: single {@code @Inject(at=RETURN)} reading
  * the screen argument; vanilla flow unchanged.

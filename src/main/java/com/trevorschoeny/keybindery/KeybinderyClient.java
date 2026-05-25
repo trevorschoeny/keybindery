@@ -97,8 +97,9 @@ public class KeybinderyClient implements ClientModInitializer {
         // Two complementary surfaces:
         //  • YACL screens get a native "Keybinds" tab injected at YACL
         //    Builder.build() HEAD (see YACLBuilderInjectMixin).
-        //  • Non-YACL screens get a top-right MK overlay button that opens
-        //    ModKeybindsModalScreen with that mod's keymappings.
+        //  • Non-YACL screens get a top-right MK overlay button that
+        //    opens the controls screen pre-filtered to that mod's keybinds
+        //    (KeybinderyKeyBindsScreen.openWithModFilterFor).
         // Both gate on ModConfigKeybindsRegistry's (modId → screen) lookup,
         // populated by ModMenuConfigScreenMixin. YACL screens fall back to
         // stack-walking when ModMenu is absent.

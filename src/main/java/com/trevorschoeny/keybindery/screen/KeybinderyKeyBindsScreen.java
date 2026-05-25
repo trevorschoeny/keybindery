@@ -137,10 +137,10 @@ public class KeybinderyKeyBindsScreen extends KeyBindsScreen {
 
     /**
      * Opens a fresh controls screen pre-filtered to show the conflict set
-     * of {@code mapping}. Called from per-row Conflicts buttons across all
-     * surfaces (modal, YACL tab, vanilla rows). If the caller is already
-     * on a {@code KeybinderyKeyBindsScreen}, just applies the filter
-     * in-place — no screen swap needed.
+     * of {@code mapping}. Called from per-row Conflicts buttons on both
+     * the YACL Keybinds tab and the vanilla Key Binds list. If the caller
+     * is already on a {@code KeybinderyKeyBindsScreen}, just applies the
+     * filter in-place — no screen swap needed.
      */
     public static void openWithConflictsFilterFor(KeyMapping mapping, Screen current) {
         if (current instanceof KeybinderyKeyBindsScreen kbScreen) {

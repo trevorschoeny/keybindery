@@ -16,9 +16,9 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
 /**
- * One-row YACL widget for chord rebinding — leans on YACL's base
- * {@link ControllerWidget#method_25394 render} to draw a single
- * button-rect spanning the whole row with the option name on the LEFT and
+ * One-row YACL widget for chord rebinding — replicates YACL's base
+ * {@code ControllerWidget.render} pattern to draw a single button-rect
+ * spanning the whole row with the option name on the LEFT and
  * the chord value on the RIGHT (vanilla-style click-to-rebind). Two
  * text-symbol icon buttons overlay the far right:
  *
