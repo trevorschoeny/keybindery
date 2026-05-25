@@ -84,6 +84,25 @@ public interface IChordKeyMapping {
     }
 
     /**
+     * Returns the keymapping's <b>default</b> chord — the chord state the
+     * user gets back when they press the Reset button. Wraps
+     * {@link KeyMapping#getDefaultKey()} as a single-key chord (preserving
+     * Type so a mouse-default like Attack stays MOUSE), or {@link Chord#UNBOUND}
+     * if the mapping was registered without a default key.
+     *
+     * <p>Used as the {@code .binding(default, ...)} arg on YACL options so
+     * YACL's "reset to default" semantics line up with vanilla's notion of
+     * a keymapping's default — without this helper, both call sites pass
+     * {@code Chord.UNBOUND} as the default, and reset becomes "clear."
+     */
+    static Chord defaultChord(KeyMapping mapping) {
+        if (mapping == null) return Chord.UNBOUND;
+        InputConstants.Key defaultKey = mapping.getDefaultKey();
+        if (defaultKey == null || defaultKey.equals(InputConstants.UNKNOWN)) return Chord.UNBOUND;
+        return new Chord(java.util.Set.of(defaultKey));
+    }
+
+    /**
      * Returns the GLFW key code of the given KeyMapping's current key binding.
      * Works around {@code KeyMapping.key} being protected with no public getter
      * in vanilla MC 1.21.11.

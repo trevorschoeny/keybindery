@@ -120,7 +120,11 @@ public abstract class YACLBuilderInjectMixin {
             catBuilder.option(Option.<Chord>createBuilder()
                     .name(Component.translatable(km.getName()))
                     .binding(
-                            Chord.UNBOUND,
+                            // YACL's "reset to default" uses this as the
+                            // target. Must be the keymapping's actual default
+                            // (e.g. Jump → Space), not UNBOUND — otherwise
+                            // Reset clears the binding instead of restoring it.
+                            IChordKeyMapping.defaultChord(km),
                             () -> IChordKeyMapping.getChord(km),
                             chord -> IChordKeyMapping.updateFromChord(km, chord))
                     .customController(option -> new ChordController(option, km))

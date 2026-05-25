@@ -60,7 +60,11 @@ public final class KeybinderyAPIImpl implements KeybinderyAPI {
                         .name(Component.empty())
                         .description(description)
                         .binding(
-                                Chord.UNBOUND,
+                                // YACL's "reset to default" uses this as the
+                                // target. Must be the keymapping's actual
+                                // default, not UNBOUND — otherwise Reset
+                                // clears the binding instead of restoring it.
+                                IChordKeyMapping.defaultChord(mapping),
                                 () -> getChord(mapping),
                                 chord -> setChord(mapping, chord))
                         .customController(option -> new ChordController(option, mapping))
