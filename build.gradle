@@ -90,7 +90,14 @@ dependencies {
     // without needing a separate keybindery-api download. (Consumer mods
     // that ALSO JIJ keybindery-api: Fabric handles duplicate-mod-id by
     // picking the newest version — safe.)
-    include project(path: ':keybindery-api', configuration: 'namedElements')
+    //
+    // JIJ the REMAPPED jar (bare `project(...)`), NOT the `namedElements`
+    // variant. `namedElements` is the dev (Mojmap) artifact — correct for the
+    // `api` compile dep above, but bundling it nests un-remapped Mojmap class
+    // refs (e.g. net.minecraft.network.chat.Component) that don't exist in a
+    // production intermediary runtime. That's invisible in the Mojmap dev
+    // launch but a hard NoClassDefFoundError on startup in any real install.
+    include project(":keybindery-api")
 
     // MenuKit — F4 controls-screen toolbar uses MK Dropdown widgets and
     // VanillaScreenPanelAdapter to host them on the vanilla KeyBindsScreen.
