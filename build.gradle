@@ -28,9 +28,10 @@
 plugins {
     id 'fabric-loom' version '1.14-SNAPSHOT'
     id 'java'
+    id 'com.modrinth.minotaur' version '2.+'
 }
 
-version = property('mod_version')
+version = property('keybindery_version')
 group   = property('maven_group')
 
 base.archivesName = 'keybindery'
@@ -114,4 +115,27 @@ loom {
 
 jar {
     from('LICENSE') { rename { "${it}_${project.name}" } }
+}
+
+// ── Modrinth Publishing ────────────────────────────────────────────────
+// Keybindery — Modrinth project id Ufxx9AC2. Lead @ Trevlar Mods owns the
+// publish (§0032). v1.0.1 = JiJ-remap bugfix over the broken, still-live v1.0.0.
+// Declares menukit required: keybindery has a hard runtime dep on it (F4
+// controls-screen toolbar), `implementation` (not `include`) above.
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")
+    projectId = "Ufxx9AC2"
+    versionNumber = property('keybindery_version')
+    versionName = "Keybindery ${property('keybindery_version')}"
+    versionType = "release"
+    changelog = '''Keybindery 1.0.1
+
+Fixes a crash on launch present in 1.0.0: an internal library was bundled with the wrong (development) build, which threw an error on startup in normal installs. Now bundled correctly. No feature changes.'''
+    uploadFile = remapJar
+    gameVersions = [property('minecraft_version')]
+    loaders = ["fabric"]
+    dependencies {
+        required.project "fabric-api"
+        required.project "menukit"
+    }
 }
