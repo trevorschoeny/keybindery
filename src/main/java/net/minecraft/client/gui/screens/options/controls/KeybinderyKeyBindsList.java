@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,13 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
     /** OR-semantics: any row whose chord shares ≥1 key with this set passes.
      *  Driven by the toolbar's Search Keybind chord-capture button. */
     private final Set<InputConstants.Key> searchChordKeys = new HashSet<>();
+
+    /** Group keys the user has collapsed by clicking the category header.
+     *  STATIC — vanilla recreates the whole screen (and this list) on
+     *  window resize; session-scoped state keeps the user's collapse
+     *  choices across that. Not persisted to disk: collapse is a browsing
+     *  gesture, not a setting. */
+    private static final Set<String> collapsedGroups = new HashSet<>();
 
     public KeybinderyKeyBindsList(KeyBindsScreen screen, Minecraft mc) {
         super(screen, mc);
@@ -103,6 +111,39 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
     public String getSearchQuery() { return searchQuery; }
     public SortOrder getSortOrder() { return sortOrder; }
     public RowFilter getRowFilter() { return rowFilter; }
+
+    // ── Collapse-all / expand-all (toolbar button) ──────────────────────────
+    // Scoped to VISIBLE groups (those with ≥1 mapping passing the current
+    // filter) — "collapse all" folds what the user is looking at; groups
+    // hidden by a filter keep their individual state.
+
+    public void collapseAllGroups() {
+        collapsedGroups.addAll(visibleGroupKeys());
+        refreshEntries();
+    }
+
+    public void expandAllGroups() {
+        collapsedGroups.removeAll(visibleGroupKeys());
+        refreshEntries();
+    }
+
+    /** True iff every currently-visible group is collapsed — drives the
+     *  toolbar's Collapse All ↔ Expand All button swap. False when nothing
+     *  is visible (button hides itself elsewhere on empty lists). */
+    public boolean allVisibleGroupsCollapsed() {
+        Set<String> keys = visibleGroupKeys();
+        return !keys.isEmpty() && collapsedGroups.containsAll(keys);
+    }
+
+    private Set<String> visibleGroupKeys() {
+        Set<String> keys = new LinkedHashSet<>();
+        Minecraft mc = this.minecraft;
+        if (mc == null || mc.options == null || mc.options.keyMappings == null) return keys;
+        for (KeyMapping km : mc.options.keyMappings) {
+            if (passesFilter(km)) keys.add(groupKeyFor(km));
+        }
+        return keys;
+    }
 
     // ── Entry rebuild ────────────────────────────────────────────────────────
 
@@ -189,16 +230,17 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
             List<KeyMapping> groupMappings = e.getValue();
             // Sort within the group alphabetically for readability.
             groupMappings.sort(Comparator.comparing(m -> Component.translatable(m.getName()).getString()));
-            // Category header — for vanilla groups use the real KeyMapping.Category;
-            // for mod-id groups (MISC fix) synthesize a literal header entry.
+            // Category header — one clickable, collapsible entry type for
+            // both real vanilla categories and synthesized mod-id groups
+            // (MISC fix); only the label source differs.
             KeyMapping.Category cat = vanillaCategoryFor(groupMappings.get(0), groupKey);
-            if (cat != null) {
-                addEntry(new CategoryEntry(cat));
-            } else {
-                addEntry(new SyntheticCategoryEntry(Component.literal(groupKey)));
-            }
-            for (KeyMapping km : groupMappings) {
-                addKeyEntry(km);
+            Component label = cat != null ? cat.label() : Component.literal(groupKey);
+            addEntry(new CollapsibleCategoryEntry(label, groupKey));
+            // Collapsed groups contribute only their header row.
+            if (!collapsedGroups.contains(groupKey)) {
+                for (KeyMapping km : groupMappings) {
+                    addKeyEntry(km);
+                }
             }
         }
     }
@@ -268,26 +310,63 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
     }
 
     /**
-     * Tiny category-header subclass for MISC-fix mod-id groups. Vanilla's
-     * CategoryEntry takes a {@link KeyMapping.Category}; we don't have one
-     * for synthetic mod-id groups, so this subclass renders a plain header
-     * from a Component.
+     * Clickable, collapsible category header — used for BOTH real vanilla
+     * categories and MISC-fix mod-id groups (label source differs; behavior
+     * is identical). Replaces vanilla's {@code CategoryEntry} (read-only
+     * centered text) with:
+     *
+     * <ul>
+     *   <li>a ▼ (expanded) / ▶ (collapsed) indicator before the label</li>
+     *   <li>click-to-toggle — collapsing hides the group's key rows,
+     *       preserving scroll position (no jump-to-top; this is a browsing
+     *       gesture, not a filter change)</li>
+     * </ul>
+     *
+     * <p>Non-static so it can be a vanilla-inner-class peer (gets the outer
+     * KeyBindsList implicitly).
      */
-    /** Non-static so it can be a vanilla-inner-class peer (gets the outer KeyBindsList implicitly). */
-    private class SyntheticCategoryEntry extends KeyBindsList.Entry {
+    private class CollapsibleCategoryEntry extends KeyBindsList.Entry {
         private final Component label;
-        SyntheticCategoryEntry(Component label) {
+        private final String groupKey;
+
+        CollapsibleCategoryEntry(Component label, String groupKey) {
             this.label = label;
+            this.groupKey = groupKey;
         }
 
         @Override
         public void renderContent(net.minecraft.client.gui.GuiGraphics graphics,
-                                  int x, int y, boolean hovered, float partialTick) {
+                                  int mouseX, int mouseY, boolean hovered, float partialTick) {
             Minecraft mc = Minecraft.getInstance();
-            graphics.drawCenteredString(mc.font, label,
-                    x + KeybinderyKeyBindsList.this.getRowWidth() / 2,
-                    y + 5,
-                    0xFFFFFF);
+            boolean collapsed = collapsedGroups.contains(groupKey);
+            // Indicator + label as one centered string, vertically centered
+            // in the 20px row. Position derives from the entry's CONTENT
+            // rect — the int params are mouse coordinates, not origins.
+            Component headerText = Component.literal(collapsed ? "▶ " : "▼ ")
+                    .append(label);
+            int centerX = this.getContentX() + this.getContentWidth() / 2;
+            int textY = this.getContentY() + (this.getContentHeight() - 9) / 2;
+            // Subtle hover tint invites the click.
+            int color = hovered ? 0xFFFFFFA0 : 0xFFFFFFFF;
+            graphics.drawCenteredString(mc.font, headerText, centerX, textY, color);
+        }
+
+        /** Toggle collapse on left-click. The list's click dispatch already
+         *  hit-tested the row, so any click landing here is ours. */
+        @Override
+        public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event,
+                                    boolean doubleClick) {
+            if (event.button() != 0) return false;
+            if (!collapsedGroups.remove(groupKey)) {
+                collapsedGroups.add(groupKey);
+            }
+            net.minecraft.client.gui.components.AbstractWidget.playButtonClickSound(
+                    Minecraft.getInstance().getSoundManager());
+            // Plain refresh — deliberately NOT refreshAndScrollToTop; the
+            // user is folding a section in place, not changing what the
+            // list is filtered to.
+            refreshEntries();
+            return true;
         }
 
         @Override

@@ -1,6 +1,7 @@
 package com.trevorschoeny.keybindery.screen;
 
 import com.trevorschoeny.keybindery.api.Chord;
+import com.trevorschoeny.menukit.core.Button;
 import com.trevorschoeny.menukit.core.ControlStyle;
 import com.trevorschoeny.menukit.core.Dropdown;
 import com.trevorschoeny.menukit.core.Panel;
@@ -56,10 +57,14 @@ public final class ControlsToolbarPanel {
     private static final int SORT_X = 28;          // after "Sort:" label
     private static final int FILTER_LABEL_X = SORT_X + SORT_W + 12;
     private static final int FILTER_X = FILTER_LABEL_X + 34; // after "Filter:" label
+    /** Collapse All / Expand All — two buttons sharing one slot after the
+     *  filter dropdown; showWhen swaps between them. */
+    private static final int COLLAPSE_W = 80;
+    private static final int COLLAPSE_X = FILTER_X + FILTER_W + 8;
 
-    /** Total outer width — derived from row-1 element widths since that's
-     *  the wider of the two rows. Used implicitly by MK's panel layout. */
-    static final int PANEL_WIDTH = CHORD_BTN_X + CHORD_BTN_W;
+    /** Total outer width — row 2 is the wider row now that the collapse
+     *  button sits after the filter dropdown. */
+    static final int PANEL_WIDTH = COLLAPSE_X + COLLAPSE_W;
 
     /** Constructs the panel + adapter and registers it with MK. Call once
      *  at client init. */
@@ -123,6 +128,38 @@ public final class ControlsToolbarPanel {
                 .style(ControlStyle.VANILLA)
                 .build();
 
+        // Collapse All / Expand All — MK Button's label is fixed at
+        // construction, so the state flip is two buttons sharing one slot
+        // with complementary showWhen conditions. Both hide under flat
+        // sorts (no category headers to fold) and when no list is open.
+        Button collapseAllBtn = new Button(
+                COLLAPSE_X, ROW2_Y, COLLAPSE_W, ELEM_H,
+                Component.literal("Collapse All"),
+                btn -> {
+                    KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();
+                    if (l != null) l.collapseAllGroups();
+                })
+                .style(ControlStyle.VANILLA)
+                .showWhen(() -> {
+                    KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();
+                    return l != null && l.getSortOrder() == SortOrder.BY_CATEGORY
+                            && !l.allVisibleGroupsCollapsed();
+                });
+
+        Button expandAllBtn = new Button(
+                COLLAPSE_X, ROW2_Y, COLLAPSE_W, ELEM_H,
+                Component.literal("Expand All"),
+                btn -> {
+                    KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();
+                    if (l != null) l.expandAllGroups();
+                })
+                .style(ControlStyle.VANILLA)
+                .showWhen(() -> {
+                    KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();
+                    return l != null && l.getSortOrder() == SortOrder.BY_CATEGORY
+                            && l.allVisibleGroupsCollapsed();
+                });
+
         // MK 18t made declaration order arbitrary — PanelDispatch runs a
         // second renderOverlay pass for popovers, so they always paint on
         // top regardless of sibling order. Order here is reader-friendly:
@@ -131,6 +168,7 @@ public final class ControlsToolbarPanel {
                 "keybindery-controls-toolbar",
                 List.<PanelElement>of(searchBox, chordBtn,
                                        sortLabel, filterLabel,
+                                       collapseAllBtn, expandAllBtn,
                                        sortDropdown, filterDropdown),
                 /*visible=*/ true,
                 PanelStyle.NONE,
