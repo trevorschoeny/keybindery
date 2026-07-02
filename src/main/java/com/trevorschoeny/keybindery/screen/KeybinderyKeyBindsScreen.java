@@ -149,7 +149,7 @@ public class KeybinderyKeyBindsScreen extends KeyBindsScreen {
         }
         pendingConflictFilterTarget = mapping;
         Minecraft mc = Minecraft.getInstance();
-        mc.setScreen(new KeybinderyKeyBindsScreen(current, mc.options));
+        mc.gui.setScreen(new KeybinderyKeyBindsScreen(current, mc.options));
     }
 
     /**
@@ -183,7 +183,7 @@ public class KeybinderyKeyBindsScreen extends KeyBindsScreen {
         }
         pendingSearchQuery = query;
         Minecraft mc = Minecraft.getInstance();
-        mc.setScreen(new KeybinderyKeyBindsScreen(current, mc.options));
+        mc.gui.setScreen(new KeybinderyKeyBindsScreen(current, mc.options));
     }
 
     /**

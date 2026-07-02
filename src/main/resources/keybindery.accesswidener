@@ -1,0 +1,10 @@
+accessWidener v2 official
+
+# 26.2 migration: vanilla made KeyBindsList.KeyEntry's constructor PRIVATE
+# (was package-private). KeybinderyKeyEntry — the F4 one-row entry — extends
+# KeyEntry via `outer.super(km, name)` from the same (vanilla) package; a
+# private ctor is nest-scoped and unreachable even there. Widening it back to
+# accessible is the standard shallow translation for a tightened vanilla
+# access modifier. (Header namespace is `official` — the 26.x unobfuscated
+# world; the old `named` namespace died with the mappings layer.)
+accessible method net/minecraft/client/gui/screens/options/controls/KeyBindsList$KeyEntry <init> (Lnet/minecraft/client/gui/screens/options/controls/KeyBindsList;Lnet/minecraft/client/KeyMapping;Lnet/minecraft/network/chat/Component;)V

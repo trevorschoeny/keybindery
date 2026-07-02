@@ -23,7 +23,7 @@ import java.util.List;
  *
  * <p>Single adapter registered at client init with {@code .onAny()}; the
  * panel's {@code showWhen} supplier gates per-screen visibility based on
- * the current active screen (read from {@code Minecraft.getInstance().screen}).
+ * the current active screen (read from {@code Minecraft.getInstance().gui.screen()}).
  * Hides when:
  * <ul>
  *   <li>No active screen.</li>
@@ -44,7 +44,7 @@ public final class ModKeybindsOverlayPanel {
                 /*width=*/ 80, /*height=*/ 20,
                 Component.literal("Keybinds"),
                 btn -> {
-                    Screen current = Minecraft.getInstance().screen;
+                    Screen current = Minecraft.getInstance().gui.screen();
                     if (current == null) return;
                     String modId = ModConfigKeybindsRegistry.modIdFor(current);
                     if (modId == null) return;
@@ -68,7 +68,7 @@ public final class ModKeybindsOverlayPanel {
 
     /** Supplier read every frame by the panel to decide visibility. */
     private static boolean shouldShow() {
-        Screen current = Minecraft.getInstance().screen;
+        Screen current = Minecraft.getInstance().gui.screen();
         if (current == null) return false;
         if (current instanceof YACLScreen) return false;
         String modId = ModConfigKeybindsRegistry.modIdFor(current);

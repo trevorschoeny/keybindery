@@ -9,7 +9,7 @@ import com.trevorschoeny.keybindery.screen.ModKeybindsOverlayPanel;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -65,14 +65,14 @@ public class KeybinderyClient implements ClientModInitializer {
         // consumer code no-ops gracefully.
         KeybinderyAPIHolder.install(new KeybinderyAPIImpl());
 
-        SIMULTANEOUS_MODE_TOGGLE = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+        SIMULTANEOUS_MODE_TOGGLE = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.keybindery.toggle_simultaneous_mode",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_UNKNOWN,
                 CATEGORY
         ));
 
-        F1_DEMO_CHORD = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+        F1_DEMO_CHORD = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.keybindery.f1_demo_chord",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_UNKNOWN,
@@ -114,8 +114,8 @@ public class KeybinderyClient implements ClientModInitializer {
                 LOGGER.info("[Keybindery] Simultaneous Mode toggled {}",
                         cfg.simultaneousMode ? "ON" : "OFF");
                 if (client.player != null) {
-                    client.player.displayClientMessage(Component.literal(
-                            "[Keybindery] Simultaneous Mode: " + (cfg.simultaneousMode ? "ON" : "OFF")), true);
+                    client.player.sendOverlayMessage(Component.literal(
+                            "[Keybindery] Simultaneous Mode: " + (cfg.simultaneousMode ? "ON" : "OFF")));
                 }
             }
             // F1 demo: log + action-bar message each time the demo chord
@@ -124,8 +124,8 @@ public class KeybinderyClient implements ClientModInitializer {
             while (F1_DEMO_CHORD.consumeClick()) {
                 LOGGER.info("[Keybindery] F1 demo chord fired!");
                 if (client.player != null) {
-                    client.player.displayClientMessage(Component.literal(
-                            "[Keybindery] F1 demo chord fired!"), true);
+                    client.player.sendOverlayMessage(Component.literal(
+                            "[Keybindery] F1 demo chord fired!"));
                 }
             }
         });

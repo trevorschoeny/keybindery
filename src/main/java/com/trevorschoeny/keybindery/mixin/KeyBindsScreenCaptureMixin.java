@@ -6,7 +6,7 @@ import com.trevorschoeny.keybindery.chord.ChordCapture;
 import com.trevorschoeny.keybindery.chord.IChordKeyMapping;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.options.controls.KeyBindsList;
@@ -141,8 +141,8 @@ public abstract class KeyBindsScreenCaptureMixin extends Screen {
         return false;
     }
 
-    @Inject(method = "render", at = @At("RETURN"))
-    private void keybindery$pollReleases(GuiGraphics graphics, int mouseX, int mouseY,
+    @Inject(method = "extractRenderState", at = @At("RETURN"))   // 26.2 extract/draw rename
+    private void keybindery$pollReleases(GuiGraphicsExtractor graphics, int mouseX, int mouseY,
                                           float partialTick, CallbackInfo ci) {
         ChordCapture active = ChordCapture.activeCapture;
         if (active != null && active.isCapturing()) {

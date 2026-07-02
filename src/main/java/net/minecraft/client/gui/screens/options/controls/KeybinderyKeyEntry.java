@@ -6,7 +6,7 @@ import com.trevorschoeny.keybindery.mixin.KeyEntryAccessor;
 import com.trevorschoeny.keybindery.screen.KeybinderyKeyBindsScreen;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -87,7 +87,7 @@ public class KeybinderyKeyEntry extends KeyBindsList.KeyEntry {
                 CONFLICTS_GLYPH,
                 btn -> KeybinderyKeyBindsScreen.openWithConflictsFilterFor(
                         accessor.keybindery$getKey(),
-                        Minecraft.getInstance().screen))
+                        Minecraft.getInstance().gui.screen()))
                 .bounds(0, 0, ICON_BTN_SIZE, ICON_BTN_SIZE)
                 .build();
 
@@ -111,7 +111,7 @@ public class KeybinderyKeyEntry extends KeyBindsList.KeyEntry {
     }
 
     @Override
-    protected void refreshEntry() {
+    public void refreshEntry() {   // 26.2: Entry.refreshEntry is public now
         super.refreshEntry();
         KeyEntryAccessor a = (KeyEntryAccessor) this;
         Button btn = a.keybindery$getChangeButton();
@@ -124,8 +124,8 @@ public class KeybinderyKeyEntry extends KeyBindsList.KeyEntry {
     }
 
     @Override
-    public void renderContent(GuiGraphics g, int mouseX, int mouseY,
-                              boolean hovered, float partialTick) {
+    public void extractContent(GuiGraphicsExtractor g, int mouseX, int mouseY,
+                               boolean hovered, float partialTick) {   // 26.2 rename
         KeyEntryAccessor a = (KeyEntryAccessor) this;
         Minecraft mc = Minecraft.getInstance();
 
@@ -149,13 +149,13 @@ public class KeybinderyKeyEntry extends KeyBindsList.KeyEntry {
         chordBtn.setX(chordBtnX);
         chordBtn.setY(btnY);
         chordBtn.setWidth(chordBtnW);
-        chordBtn.render(g, mouseX, mouseY, partialTick);
+        chordBtn.extractRenderState(g, mouseX, mouseY, partialTick);
 
         // Chord text on the RIGHT, drawn first so we know its left edge
         // before laying out the name's clip rect.
         int chordWidth = mc.font.width(currentChordText);
         int chordLeft = chordBtnRight - TEXT_INSET - chordWidth;
-        g.drawString(mc.font, currentChordText, chordLeft, textY, 0xFFFFFFFF, true);
+        g.text(mc.font, currentChordText, chordLeft, textY, 0xFFFFFFFF, true);
 
         // Name on the LEFT — left-aligned when it fits, auto-scrolls
         // (vanilla's built-in marquee, used by all stock Buttons via
@@ -170,9 +170,9 @@ public class KeybinderyKeyEntry extends KeyBindsList.KeyEntry {
         int nameBoxWidth = nameRight - nameLeft;
         if (nameBoxWidth > 0) {
             if (mc.font.width(name) <= nameBoxWidth) {
-                g.drawString(mc.font, name, nameLeft, textY, 0xFFFFFFFF, true);
+                g.text(mc.font, name, nameLeft, textY, 0xFFFFFFFF, true);
             } else {
-                g.textRenderer(GuiGraphics.HoveredTextEffects.NONE)
+                g.textRenderer(GuiGraphicsExtractor.HoveredTextEffects.NONE)
                         .acceptScrollingWithDefaultCenter(
                                 name, nameLeft, nameRight, contentY, contentY + ICON_BTN_SIZE);
             }
@@ -186,13 +186,13 @@ public class KeybinderyKeyEntry extends KeyBindsList.KeyEntry {
         boolean hasConflict = ChordConflicts.hasAnyConflict(a.keybindery$getKey());
         conflictsButton.active = hasConflict;
         conflictsButton.setTooltip(hasConflict ? CONFLICTS_TOOLTIP : null);
-        conflictsButton.render(g, mouseX, mouseY, partialTick);
+        conflictsButton.extractRenderState(g, mouseX, mouseY, partialTick);
 
         // Reset text-symbol icon — active iff not already at default.
         resetIconButton.setX(resetX);
         resetIconButton.setY(btnY);
         resetIconButton.active = !a.keybindery$getKey().isDefault();
-        resetIconButton.render(g, mouseX, mouseY, partialTick);
+        resetIconButton.extractRenderState(g, mouseX, mouseY, partialTick);
     }
 
     @Override

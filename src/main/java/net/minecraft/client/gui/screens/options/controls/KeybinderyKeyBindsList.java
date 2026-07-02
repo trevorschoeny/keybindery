@@ -335,7 +335,7 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
         }
 
         @Override
-        public void renderContent(net.minecraft.client.gui.GuiGraphics graphics,
+        public void extractContent(net.minecraft.client.gui.GuiGraphicsExtractor graphics,
                                   int mouseX, int mouseY, boolean hovered, float partialTick) {
             Minecraft mc = Minecraft.getInstance();
             boolean collapsed = collapsedGroups.contains(groupKey);
@@ -348,7 +348,7 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
             int textY = this.getContentY() + (this.getContentHeight() - 9) / 2;
             // Subtle hover tint invites the click.
             int color = hovered ? 0xFFFFFFA0 : 0xFFFFFFFF;
-            graphics.drawCenteredString(mc.font, headerText, centerX, textY, color);
+            graphics.centeredText(mc.font, headerText, centerX, textY, color);
         }
 
         /** Toggle collapse on left-click. The list's click dispatch already
@@ -380,6 +380,6 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
         }
 
         @Override
-        protected void refreshEntry() {}
+        public void refreshEntry() {}
     }
 }

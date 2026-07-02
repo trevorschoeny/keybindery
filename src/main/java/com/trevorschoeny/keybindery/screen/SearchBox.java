@@ -77,9 +77,9 @@ public class SearchBox extends AbstractPanelElement<SearchBox> {
         editBox.setX(sx);
         editBox.setY(sy);
         if (ctx.hasMouseInput()) {
-            editBox.render(ctx.graphics(), ctx.mouseX(), ctx.mouseY(), 0f);
+            editBox.extractRenderState(ctx.graphics(), ctx.mouseX(), ctx.mouseY(), 0f);
         } else {
-            editBox.render(ctx.graphics(), -1, -1, 0f);
+            editBox.extractRenderState(ctx.graphics(), -1, -1, 0f);
         }
     }
 

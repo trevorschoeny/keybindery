@@ -8,7 +8,7 @@ import dev.isxander.yacl3.gui.YACLScreen;
 import dev.isxander.yacl3.gui.controllers.ControllerWidget;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.input.KeyEvent;
@@ -69,7 +69,7 @@ public class ChordControllerWidget extends ControllerWidget<ChordController> {
         this.conflictsButton = Button.builder(
                 CONFLICTS_GLYPH,
                 btn -> KeybinderyKeyBindsScreen.openWithConflictsFilterFor(
-                        control.mapping(), Minecraft.getInstance().screen))
+                        control.mapping(), Minecraft.getInstance().gui.screen()))
                 .bounds(0, 0, ICON_BTN_SIZE, ICON_BTN_SIZE)
                 .build();
 
@@ -124,7 +124,7 @@ public class ChordControllerWidget extends ControllerWidget<ChordController> {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {   // 26.2/YACL 3.9.5 rename
         // Compute icon positions FIRST so we can anchor the button rect
         // off them — guarantees a clean GAP between the button and the
         // conflicts icon (no negative-gap arithmetic surprises).
@@ -165,20 +165,20 @@ public class ChordControllerWidget extends ControllerWidget<ChordController> {
         drawButtonRect(graphics, getDimension().x(), getDimension().y(),
                 btnX2, getDimension().yLimit(),
                 (hovered && isAvailable()) || focused, isAvailable());
-        graphics.drawString(textRenderer, valueText, valueTextLeft, getTextY(),
+        graphics.text(textRenderer, valueText, valueTextLeft, getTextY(),
                 getValueColor(), true);
         if (nameBoxWidth > 0) {
             if (textRenderer.width(name) <= nameBoxWidth) {
-                graphics.drawString(textRenderer, name, nameLeft, getTextY(),
+                graphics.text(textRenderer, name, nameLeft, getTextY(),
                         getValueColor(), true);
             } else {
-                graphics.textRenderer(GuiGraphics.HoveredTextEffects.NONE)
+                graphics.textRenderer(GuiGraphicsExtractor.HoveredTextEffects.NONE)
                         .acceptScrollingWithDefaultCenter(
                                 name, nameLeft, nameRight,
                                 getDimension().y(), getDimension().yLimit());
             }
         }
-        if (isHovered()) drawHoveredControl(graphics, mouseX, mouseY, delta);
+        if (isHovered()) extractHoveredControl(graphics, mouseX, mouseY, delta);
 
         // Icons — separate widgets now, not overlaid on the button rect.
         conflictsButton.setX(conflictsX);
@@ -186,12 +186,12 @@ public class ChordControllerWidget extends ControllerWidget<ChordController> {
         boolean hasConflict = ChordConflicts.hasAnyConflict(control.mapping());
         conflictsButton.active = hasConflict;
         conflictsButton.setTooltip(hasConflict ? CONFLICTS_TOOLTIP : null);
-        conflictsButton.render(graphics, mouseX, mouseY, delta);
+        conflictsButton.extractRenderState(graphics, mouseX, mouseY, delta);
 
         resetButton.setX(resetX);
         resetButton.setY(btnY);
         resetButton.active = control.option().changed();
-        resetButton.render(graphics, mouseX, mouseY, delta);
+        resetButton.extractRenderState(graphics, mouseX, mouseY, delta);
 
         // Per-frame GLFW release polling for the active capture (vanilla pattern).
         if (capturing && capture != null) {
@@ -236,7 +236,7 @@ public class ChordControllerWidget extends ControllerWidget<ChordController> {
         if (overConflicts) {
             if (conflictsButton.active) {
                 KeybinderyKeyBindsScreen.openWithConflictsFilterFor(
-                        control.mapping(), Minecraft.getInstance().screen);
+                        control.mapping(), Minecraft.getInstance().gui.screen());
             }
             return true;
         }

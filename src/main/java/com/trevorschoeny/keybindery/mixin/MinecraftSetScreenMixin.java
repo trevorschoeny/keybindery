@@ -2,7 +2,7 @@ package com.trevorschoeny.keybindery.mixin;
 
 import com.trevorschoeny.keybindery.config.KeybinderyConfig;
 import com.trevorschoeny.keybindery.screen.KeybinderyKeyBindsScreen;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.options.controls.KeyBindsScreen;
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
  * F4 — replace vanilla {@link KeyBindsScreen} with Keybindery's
  * {@link KeybinderyKeyBindsScreen} at the moment the screen is opened.
  * Pattern borrowed verbatim from Controlling (jaredlll08): one
- * {@link ModifyVariable @ModifyVariable} on {@link Minecraft#setScreen}
+ * {@link ModifyVariable @ModifyVariable} on {@link Gui#setScreen}
  * at HEAD intercepts the {@code Screen} argument; if it's exactly
  * {@code KeyBindsScreen} (not a subclass — important, since our own screen
  * IS a subclass), construct ours and return it instead.
@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
  * is true (kill-switch), the swap is skipped — useful for players running
  * Controlling alongside who prefer Controlling's UX.
  */
-@Mixin(Minecraft.class)
+@Mixin(Gui.class)   // 26.2: setScreen moved Minecraft → Gui (screen/overlay manager)
 public abstract class MinecraftSetScreenMixin {
 
     @ModifyVariable(method = "setScreen", at = @At("HEAD"), argsOnly = true)

@@ -90,7 +90,7 @@ public class SearchKeybindButton extends AbstractPanelElement<SearchKeybindButto
         int textWidth = font.width(label);
         int textX = sx + Math.max(2, (width - textWidth) / 2);
         int textY = sy + (height - font.lineHeight) / 2;
-        ctx.graphics().drawString(font, label, textX, textY, 0xFFFFFFFF, true);
+        ctx.graphics().text(font, label, textX, textY, 0xFFFFFFFF, true);
 
         // Hover-triggered tooltip — surfaces the right-click-to-clear hint
         // (otherwise non-discoverable). Skip while capturing — the preview

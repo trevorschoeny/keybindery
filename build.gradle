@@ -26,7 +26,9 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 plugins {
-    id 'fabric-loom' version '1.14-SNAPSHOT'
+    // 26.x migration (2026-07-02): Loom plugin id is namespaced at 1.15+;
+    // 1.17 is the 26.2-era line. Version pinned at the workspace root.
+    id 'net.fabricmc.fabric-loom' version '1.17-SNAPSHOT'
     id 'java'
     id 'com.modrinth.minotaur' version '2.+'
 }
@@ -51,8 +53,9 @@ processResources {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    // Minecraft 26.x runs on Java 25.
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
 }
 
 repositories {
@@ -64,27 +67,33 @@ repositories {
     // YACL — config-screen framework used for Keybindery's own settings
     // (Simultaneous Mode toggle + window). JIJ'd via Loom's `include` so
     // players install Keybindery and YACL comes along bundled.
-    maven { url 'https://maven.isxander.dev/releases/' }
+    // 26.x: isxander's own maven stops at the 3.8.x line; the 26.2 builds
+    // (3.9.x) ship via the Modrinth maven only (verified 2026-07-02).
+    maven { url 'https://api.modrinth.com/maven' }
 }
 
 dependencies {
+    // 26.x: the game is unobfuscated — no mappings line, and mod deps use the
+    // standard java configurations (modImplementation → implementation etc.).
     minecraft "com.mojang:minecraft:${property('minecraft_version')}"
-    mappings loom.officialMojangMappings()
-    modImplementation "net.fabricmc:fabric-loader:${property('loader_version')}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${property('fabric_version')}"
+    implementation "net.fabricmc:fabric-loader:${property('loader_version')}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${property('fabric_version')}"
 
-    // ModMenu — soft dep. compileOnly here means Keybindery compiles
-    // against ModMenu's API; modLocalRuntime brings it into the dev launch
-    // so the in-game mod list shows Keybindery's config screen entry.
-    modCompileOnly "com.terraformersmc:modmenu:17.0.0"
-    modLocalRuntime "com.terraformersmc:modmenu:17.0.0"
+    // ModMenu — soft dep. compileOnly here means Keybindery compiles against
+    // ModMenu's API; the runtime-only line brings it into the dev launch so
+    // the in-game mod list shows Keybindery's config screen entry.
+    // ⚠️ 26.2 status: beta only (20.0.0-beta.4, verified on Modrinth
+    // 2026-07-02) — the only non-stable dep in the pass. Keybindery's
+    // @Mixin(ModMenu.class) must hold against it; watched explicitly.
+    compileOnly "com.terraformersmc:modmenu:20.0.0-beta.4"
+    localRuntime "com.terraformersmc:modmenu:20.0.0-beta.4"
 
     // YACL — Keybindery's chosen config-screen framework. Bundled into
     // Keybindery's jar via Loom's `include` (Jar-in-Jar), so players don't
-    // need to install YACL separately. `modImplementation` covers compile
+    // need to install YACL separately. `implementation` covers compile
     // + dev runtime; `include` is what JIJs YACL into the release jar.
-    modImplementation "dev.isxander:yet-another-config-lib:3.8.1+1.21.11-fabric"
-    include          "dev.isxander:yet-another-config-lib:3.8.1+1.21.11-fabric"
+    implementation "maven.modrinth:yacl:3.9.5+26.2-fabric"
+    include        "maven.modrinth:yacl:3.9.5+26.2-fabric"
 
     // @ApiStatus.Internal markers and similar annotations. compileOnly so
     // consumer mods don't transitively depend on jetbrains-annotations at
@@ -98,7 +107,9 @@ dependencies {
     // keybindery-api directly. Per Trev's silent-fail directive, consumer
     // mods can depend on keybindery-api ALONE for compile-time access
     // without bundling keybindery main at runtime.
-    api project(path: ':keybindery-api', configuration: 'namedElements')
+    // (26.x: the remap layer is gone, so the `namedElements` variant no
+    // longer exists — a plain project dep is THE artifact now.)
+    api project(':keybindery-api')
 
     // JIJ keybindery-api so a player who installs only keybindery (main)
     // jar gets the api types and the YACL widget code path at runtime
@@ -106,21 +117,22 @@ dependencies {
     // that ALSO JIJ keybindery-api: Fabric handles duplicate-mod-id by
     // picking the newest version — safe.)
     //
-    // JIJ the REMAPPED jar (bare `project(...)`), NOT the `namedElements`
-    // variant. `namedElements` is the dev (Mojmap) artifact — correct for the
-    // `api` compile dep above, but bundling it nests un-remapped Mojmap class
-    // refs (e.g. net.minecraft.network.chat.Component) that don't exist in a
-    // production intermediary runtime. That's invisible in the Mojmap dev
-    // launch but a hard NoClassDefFoundError on startup in any real install.
+    // §0035 (JiJ the shippable jar) lineage: pre-26.x this had to be the
+    // REMAPPED jar, never `namedElements`. With the remap layer gone the
+    // hazard class is gone too — the bare project dep IS the shippable jar.
     include project(":keybindery-api")
 
     // MenuKit — F4 controls-screen toolbar uses MK Dropdown widgets and
     // VanillaScreenPanelAdapter to host them on the vanilla KeyBindsScreen.
     // Hard dependency rather than soft because the toolbar is core to F4.
-    implementation project(path: ':menukit', configuration: 'namedElements')
+    implementation project(':menukit')
 }
 
 loom {
+    // 26.2: KeyBindsList.KeyEntry's ctor went private; KeybinderyKeyEntry
+    // subclasses it. See the .accesswidener file for the rationale.
+    accessWidenerPath = file("src/main/resources/keybindery.accesswidener")
+
     runs {
         client { ideConfigGenerated = false }
         server { ideConfigGenerated = false }
@@ -145,7 +157,8 @@ modrinth {
     changelog = '''Keybindery 1.0.2
 
 Updated for MenuKit 2.0. Keybindery now requires MenuKit 2.0.0 or newer (a separate download).'''
-    uploadFile = remapJar
+    // 26.x: no remap step — `jar` IS the shippable artifact (remapJar is gone).
+    uploadFile = jar
     gameVersions = [property('minecraft_version')]
     loaders = ["fabric"]
     dependencies {

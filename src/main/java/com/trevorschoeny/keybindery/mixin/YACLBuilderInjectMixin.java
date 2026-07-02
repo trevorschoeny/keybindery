@@ -143,8 +143,8 @@ public abstract class YACLBuilderInjectMixin {
                 .text(Component.literal("Open"))
                 .action((screen, opt) -> {
                     Minecraft mc = Minecraft.getInstance();
-                    mc.setScreen(new com.trevorschoeny.keybindery.screen.KeybinderyKeyBindsScreen(
-                            mc.screen, mc.options));
+                    mc.gui.setScreen(new com.trevorschoeny.keybindery.screen.KeybinderyKeyBindsScreen(
+                            mc.gui.screen(), mc.options));
                 })
                 .build());
         return catBuilder.build();
