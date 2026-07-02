@@ -24,7 +24,11 @@ import java.util.function.Supplier;
  * evidence once another consumer hits this), this class can fold into
  * TextField and disappear.
  */
-public class SearchBox extends AbstractPanelElement {
+public class SearchBox extends AbstractPanelElement<SearchBox> {
+
+    /** MK 2.0.0 self-typed-generic contract — chainable base setters
+     *  return the concrete subtype. */
+    @Override protected SearchBox self() { return this; }
 
     private final int childX;
     private final int childY;

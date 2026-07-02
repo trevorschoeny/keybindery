@@ -5,7 +5,7 @@ import com.trevorschoeny.menukit.core.Panel;
 import com.trevorschoeny.menukit.core.PanelElement;
 import com.trevorschoeny.menukit.core.PanelPosition;
 import com.trevorschoeny.menukit.core.PanelStyle;
-import com.trevorschoeny.menukit.core.VanillaScreenRegion;
+import com.trevorschoeny.menukit.core.ScreenRegion;
 import com.trevorschoeny.menukit.inject.VanillaScreenPanelAdapter;
 import dev.isxander.yacl3.gui.YACLScreen;
 import net.minecraft.client.Minecraft;
@@ -60,7 +60,9 @@ public final class ModKeybindsOverlayPanel {
                 /*toggleKey=*/ -1);
         panel.showWhen(ModKeybindsOverlayPanel::shouldShow);
 
-        new VanillaScreenPanelAdapter(panel, VanillaScreenRegion.TOP_RIGHT, /*padding=*/ 0)
+        // ScreenRegion — MK 2.0.0 folded the old VanillaScreenRegion enum
+        // into the unified region model (§0057); same nine anchors.
+        new VanillaScreenPanelAdapter(panel, ScreenRegion.TOP_RIGHT, /*padding=*/ 0)
                 .onAny();
     }
 

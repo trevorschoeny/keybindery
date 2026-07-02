@@ -24,7 +24,11 @@ import org.jspecify.annotations.Nullable;
  * {@code KeyBindsScreen.keyPressed/mouseClicked} forward all subsequent
  * events to the active capture engine.
  */
-public class SearchKeybindButton extends AbstractPanelElement {
+public class SearchKeybindButton extends AbstractPanelElement<SearchKeybindButton> {
+
+    /** MK 2.0.0 self-typed-generic contract — chainable base setters
+     *  return the concrete subtype. */
+    @Override protected SearchKeybindButton self() { return this; }
 
     private final int childX;
     private final int childY;
