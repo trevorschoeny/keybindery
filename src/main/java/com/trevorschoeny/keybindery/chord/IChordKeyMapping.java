@@ -105,7 +105,7 @@ public interface IChordKeyMapping {
     /**
      * Returns the GLFW key code of the given KeyMapping's current key binding.
      * Works around {@code KeyMapping.key} being protected with no public getter
-     * in vanilla MC 1.21.11.
+     * in vanilla MC 26.2.
      */
     static int getKeyCode(KeyMapping mapping) {
         try {
