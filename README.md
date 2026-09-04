@@ -16,12 +16,12 @@ Keybindery is client-side only — installing it adds zero weight on servers.
 
 ## Install
 
-Drop the jar in your `mods/` folder along with Fabric API and YACL.
+Drop the jar in your `mods/` folder along with Fabric API. YACL is bundled inside the jar.
 
 **Requires:**
 - Fabric Loader ≥ 0.15
 - Fabric API
-- [YACL](https://modrinth.com/mod/yacl) (Yet Another Config Lib) ≥ 3.8 for 1.21.11
+- Minecraft 26.2 (this build); [YACL](https://modrinth.com/mod/yacl) 3.9.6 comes bundled, no separate install needed
 
 **Recommended (not required):**
 - [Mod Menu](https://modrinth.com/mod/modmenu) — needed for the auto-listed-mod-keybinds feature to discover which keybinds belong to which mod
