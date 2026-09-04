@@ -153,9 +153,11 @@ modrinth {
     versionNumber = property('keybindery_version')
     versionName = "Keybindery ${property('keybindery_version')}"
     versionType = "release"
-    changelog = '''Keybindery 1.0.2
-
-Updated for MenuKit 2.0. Keybindery now requires MenuKit 2.0.0 or newer (a separate download).'''
+    // ci-cd.md stage 5: the player-facing changelog lives in changelog.md, one entry,
+    // overwritten each release (git keeps the history). Hardcoding it here went stale.
+    changelog = file('changelog.md').text
+    // ci-cd.md stage 7: the README is the public description; `modrinthSyncBody` pushes it.
+    syncBodyFrom = file('README.md').text
     // 26.x: no remap step — `jar` IS the shippable artifact (remapJar is gone).
     uploadFile = jar
     gameVersions = [property('minecraft_version')]
