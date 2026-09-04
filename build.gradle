@@ -82,18 +82,17 @@ dependencies {
     // ModMenu — soft dep. compileOnly here means Keybindery compiles against
     // ModMenu's API; the runtime-only line brings it into the dev launch so
     // the in-game mod list shows Keybindery's config screen entry.
-    // ⚠️ 26.2 status: beta only (20.0.0-beta.4, verified on Modrinth
-    // 2026-07-02) — the only non-stable dep in the pass. Keybindery's
-    // @Mixin(ModMenu.class) must hold against it; watched explicitly.
-    compileOnly "com.terraformersmc:modmenu:20.0.0-beta.4"
-    localRuntime "com.terraformersmc:modmenu:20.0.0-beta.4"
+    // 26.2 status: stable since 20.0.0 (2026-07-08); bumped to 20.0.1 on
+    // 2026-09-04. Keybindery's @Mixin(ModMenu.class) must hold against it.
+    compileOnly "com.terraformersmc:modmenu:20.0.1"
+    localRuntime "com.terraformersmc:modmenu:20.0.1"
 
     // YACL — Keybindery's chosen config-screen framework. Bundled into
     // Keybindery's jar via Loom's `include` (Jar-in-Jar), so players don't
     // need to install YACL separately. `implementation` covers compile
     // + dev runtime; `include` is what JIJs YACL into the release jar.
-    implementation "maven.modrinth:yacl:3.9.5+26.2-fabric"
-    include        "maven.modrinth:yacl:3.9.5+26.2-fabric"
+    implementation "maven.modrinth:yacl:3.9.6+26.2-fabric"
+    include        "maven.modrinth:yacl:3.9.6+26.2-fabric"
 
     // @ApiStatus.Internal markers and similar annotations. compileOnly so
     // consumer mods don't transitively depend on jetbrains-annotations at
