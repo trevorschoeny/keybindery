@@ -1,1 +1,1 @@
-Now runs on Minecraft 26.2. Same chords and same keybind screen as 1.0.2. The config library (YACL 3.9.6) is bundled, so there is nothing extra to install. Mod Menu integration targets the stable 20.0 release.
+Built against MenuKit 3.0.0. Requires MenuKit 3.0.0 or newer. No feature changes.
