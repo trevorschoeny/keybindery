@@ -1,8 +1,8 @@
 package com.trevorschoeny.keybindery.screen;
 
-import com.trevorschoeny.menukit.core.AbstractPanelElement;
-import com.trevorschoeny.menukit.core.MKFocus;
-import com.trevorschoeny.menukit.core.RenderContext;
+import com.trevlar.menukit.core.AbstractPanelElement;
+import com.trevlar.menukit.core.MKFocus;
+import com.trevlar.menukit.core.RenderContext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -14,7 +14,7 @@ import java.util.function.Supplier;
 
 /**
  * F4 toolbar search field — wraps vanilla {@link EditBox} as an MK
- * {@link com.trevorschoeny.menukit.core.PanelElement}. Pattern parallels
+ * {@link com.trevlar.menukit.core.PanelElement}. Pattern parallels
  * MK's own {@code TextField}, but explicitly calls {@link Screen#setFocused}
  * in {@code mouseClicked} — required because {@code VanillaScreenPanelAdapter}
  * eats in-panel clicks before vanilla's Screen.mouseClicked can route them

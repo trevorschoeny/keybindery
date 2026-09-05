@@ -1,16 +1,16 @@
 package com.trevorschoeny.keybindery.screen;
 
 import com.trevorschoeny.keybindery.api.Chord;
-import com.trevorschoeny.menukit.core.Button;
-import com.trevorschoeny.menukit.core.ControlStyle;
-import com.trevorschoeny.menukit.core.Dropdown;
-import com.trevorschoeny.menukit.core.Panel;
-import com.trevorschoeny.menukit.core.PanelElement;
-import com.trevorschoeny.menukit.core.PanelPosition;
-import com.trevorschoeny.menukit.core.PanelStyle;
-import com.trevorschoeny.menukit.core.ScreenRegion;
-import com.trevorschoeny.menukit.core.TextLabel;
-import com.trevorschoeny.menukit.inject.VanillaScreenPanelAdapter;
+import com.trevlar.menukit.core.Button;
+import com.trevlar.menukit.core.ControlStyle;
+import com.trevlar.menukit.core.Dropdown;
+import com.trevlar.menukit.core.Panel;
+import com.trevlar.menukit.core.PanelElement;
+import com.trevlar.menukit.core.PanelPosition;
+import com.trevlar.menukit.core.PanelStyle;
+import com.trevlar.menukit.core.ScreenRegion;
+import com.trevlar.menukit.core.TextLabel;
+import com.trevlar.menukit.inject.VanillaScreenPanelAdapter;
 import net.minecraft.network.chat.Component;
 import net.minecraft.client.gui.screens.options.controls.KeybinderyKeyBindsList;
 

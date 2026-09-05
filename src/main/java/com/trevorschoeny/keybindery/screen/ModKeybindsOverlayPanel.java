@@ -1,12 +1,12 @@
 package com.trevorschoeny.keybindery.screen;
 
-import com.trevorschoeny.menukit.core.Button;
-import com.trevorschoeny.menukit.core.Panel;
-import com.trevorschoeny.menukit.core.PanelElement;
-import com.trevorschoeny.menukit.core.PanelPosition;
-import com.trevorschoeny.menukit.core.PanelStyle;
-import com.trevorschoeny.menukit.core.ScreenRegion;
-import com.trevorschoeny.menukit.inject.VanillaScreenPanelAdapter;
+import com.trevlar.menukit.core.Button;
+import com.trevlar.menukit.core.Panel;
+import com.trevlar.menukit.core.PanelElement;
+import com.trevlar.menukit.core.PanelPosition;
+import com.trevlar.menukit.core.PanelStyle;
+import com.trevlar.menukit.core.ScreenRegion;
+import com.trevlar.menukit.inject.VanillaScreenPanelAdapter;
 import dev.isxander.yacl3.gui.YACLScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
