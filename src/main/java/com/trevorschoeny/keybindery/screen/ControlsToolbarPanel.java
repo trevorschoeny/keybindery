@@ -8,7 +8,7 @@ import com.trevlar.menukit.core.Panel;
 import com.trevlar.menukit.core.PanelElement;
 import com.trevlar.menukit.core.PanelPosition;
 import com.trevlar.menukit.core.PanelStyle;
-import com.trevlar.menukit.core.ScreenRegion;
+import com.trevlar.menukit.core.InsideRegion;
 import com.trevlar.menukit.core.TextLabel;
 import com.trevlar.menukit.inject.VanillaScreenPanelAdapter;
 import net.minecraft.network.chat.Component;
@@ -175,9 +175,9 @@ public final class ControlsToolbarPanel {
                 PanelPosition.BODY,
                 /*toggleKey=*/ -1);
 
-        // ScreenRegion — MK 2.0.0 folded the old VanillaScreenRegion enum
+        // InsideRegion — MK 2.0.0 folded the old VanillaScreenRegion enum
         // into the unified region model (§0057); same nine anchors.
-        new VanillaScreenPanelAdapter(toolbar, ScreenRegion.TOP_CENTER, /*padding=*/ 0)
+        new VanillaScreenPanelAdapter(toolbar, InsideRegion.TOP_CENTER, /*padding=*/ 0)
                 .on(KeybinderyKeyBindsScreen.class);
     }
 
