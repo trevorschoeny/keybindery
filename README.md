@@ -22,6 +22,7 @@ Requires:
 - Minecraft 26.2 (this build)
 - Fabric Loader 0.19.5 or newer
 - Fabric API
+- MenuKit 5.0.0 or newer, below 6.0.0
 
 [YACL](https://modrinth.com/mod/yacl) 3.9.6 comes bundled, so there is no separate install.
 
