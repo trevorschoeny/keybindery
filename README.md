@@ -2,17 +2,15 @@
 
 A chord-keybind library and controls-screen overhaul for Fabric. Bind multi-key combinations to any keymapping, vanilla or modded. Find and rebind a mod's keybinds from inside that mod's own config screen. Search, sort, and filter the controls screen.
 
-## What it is
+## Features
 
-Three features in one client-side mod.
+You can bind a combination like `Ctrl + Shift + K` or `X + Z` to any keybind in the game, vanilla or modded. Single-key bindings keep working as they did.
 
-Multi-key chord keybinds. Bind combinations like `Ctrl + Shift + K` or `X + Z` to any keybind in the game, vanilla and modded alike. Existing single-key bindings keep working unchanged.
+Every mod's keybinds appear on a "Keybinds" tab in that mod's config screen if it uses YACL, or behind a small "Keybinds" button on other config screens, so you don't have to dig through the Key Binds menu for one mod's bindings.
 
-Auto-listed mod keybinds. Every mod's keybinds appear on a "Keybinds" tab in that mod's config screen if it uses YACL, or behind a small "Keybinds" button for other config screens. You don't have to dig through the Key Binds menu to find one mod's bindings.
+The vanilla Key Binds menu gets a search box, a search-by-chord button, and sort and filter dropdowns along the top. Each row has a Conflicts icon, which jumps to the binds it clashes with, and a Reset icon. Long keybind names scroll.
 
-Controls screen overhaul. A search box, a search-by-chord button, a sort dropdown, and a filter dropdown sit at the top of the vanilla Key Binds menu. Each row has a Conflicts icon that jumps to the conflict set and a Reset icon. Long keybind names scroll.
-
-Keybindery is client-side only. Installing it adds nothing to servers.
+Keybindery runs on the client only. Servers don't need it.
 
 ## Install
 
@@ -94,7 +92,7 @@ If you render keybind rows yourself instead of through `createYACLChordOption`, 
 KeybinderyAPI.getInstance().markClaimed(myKey);
 ```
 
-Safe to call repeatedly.
+You can call it more than once.
 
 ### Stub behavior
 
@@ -102,7 +100,7 @@ Safe to call repeatedly.
 
 ## Compatibility
 
-Vanilla single-key bindings are fully respected. Mods that don't opt into chords behave exactly as before.
+Vanilla single-key bindings keep working. Mods that don't opt into chords behave exactly as before.
 
 Keybindery changes `KeyMapping` through narrow mixin injections and never overwrites a vanilla method, so other mods that touch the same code still run. This is how it coexists with input mods such as Controlify.
 
@@ -112,7 +110,7 @@ Chords are saved alongside vanilla's `options.txt`. Removing Keybindery later re
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](https://github.com/trevorschoeny/keybindery/blob/main/LICENSE).
 
 ## Credits
 
