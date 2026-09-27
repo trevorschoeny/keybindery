@@ -17,6 +17,7 @@ import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
+import java.util.function.BooleanSupplier;
 
 /**
  * MenuKit sibling of {@link ChordControllerWidget}: the in-config key button
@@ -65,8 +66,13 @@ public class ChordButton extends AbstractPanelElement<ChordButton> {
     private final Button conflicts;
     private final Button reset;
     private @Nullable TextLabel label;
+    /** Same text as {@link #label}, greyed, swapped in while {@link #isDisabled()}. */
+    private @Nullable TextLabel labelDisabled;
 
     private @Nullable ChordCapture capture;
+
+    /** Set via {@link #disabledWhen}; null (default) means never disabled. */
+    private @Nullable BooleanSupplier disabledWhen;
 
     public ChordButton(KeyMapping mapping) {
         this.mapping = mapping;
@@ -75,18 +81,33 @@ public class ChordButton extends AbstractPanelElement<ChordButton> {
         this.conflicts = new Button(0, 0, ICON, ICON, Component.literal("⚠"),
                 b -> KeybinderyKeyBindsScreen.openWithConflictsFilterFor(
                         mapping, Minecraft.getInstance().gui.screen()),
-                () -> !ChordConflicts.hasAnyConflict(mapping))
+                () -> isDisabled() || !ChordConflicts.hasAnyConflict(mapping))
                 .tooltip(Component.translatable("keybindery.tooltip.show_conflicts"));
         this.reset = new Button(0, 0, ICON, ICON, Component.literal("↻"),
                 b -> KeybinderyAPI.getInstance().setChord(mapping, IChordKeyMapping.defaultChord(mapping)),
-                () -> Objects.equals(IChordKeyMapping.getChord(mapping), IChordKeyMapping.defaultChord(mapping)))
+                () -> isDisabled() || Objects.equals(IChordKeyMapping.getChord(mapping), IChordKeyMapping.defaultChord(mapping)))
                 .tooltip(Component.translatable("keybindery.tooltip.reset_to_default"));
     }
 
     /** Optional text drawn left of the key, in MenuKit's default label colour. */
     public ChordButton label(Component text) {
         this.label = new TextLabel(0, 0, text);
+        this.labelDisabled = new TextLabel(0, 0, text, 0xFF808080, false);
         return this;
+    }
+
+    /**
+     * Greys out the key face, ⚠, ↻ and label, and blocks clicks/capture,
+     * while the supplier returns true. Read every frame; a capture already
+     * in progress is cancelled the frame this turns true.
+     */
+    public ChordButton disabledWhen(BooleanSupplier supplier) {
+        this.disabledWhen = supplier;
+        return this;
+    }
+
+    private boolean isDisabled() {
+        return disabledWhen != null && disabledWhen.getAsBoolean();
     }
 
     // ── Geometry: children are positioned relative to this element's origin ──
@@ -103,7 +124,9 @@ public class ChordButton extends AbstractPanelElement<ChordButton> {
     private void place() {
         int x = childX;
         if (label != null) {
-            label.at(x, childY + (H - Minecraft.getInstance().font.lineHeight) / 2 + 1);
+            int ly = childY + (H - Minecraft.getInstance().font.lineHeight) / 2 + 1;
+            label.at(x, ly);
+            labelDisabled.at(x, ly);
             x += labelW();
         }
         face.at(x, childY);
@@ -115,7 +138,10 @@ public class ChordButton extends AbstractPanelElement<ChordButton> {
     @Override
     public void render(RenderContext ctx) {
         place();
-        if (label != null) label.render(ctx);
+        // Disabled mid-capture (e.g. the owning tab just got toggled off):
+        // drop it so the shared static capture state stops eating keys.
+        if (capture != null && isDisabled()) stopCapture();
+        if (label != null) (isDisabled() ? labelDisabled : label).render(ctx);
         face.render(ctx);
         conflicts.render(ctx);
         reset.render(ctx);
@@ -202,16 +228,18 @@ public class ChordButton extends AbstractPanelElement<ChordButton> {
     /** The key face: a stock MK Button whose content is the live chord text. */
     private final class Face extends Button {
         Face() {
-            super(0, 0, FACE_W, H, Component.empty(), b -> {});
+            super(0, 0, FACE_W, H, Component.empty(), b -> {}, () -> ChordButton.this.isDisabled());
         }
 
         @Override
         protected void renderContent(RenderContext ctx, int sx, int sy) {
-            MKText.renderCentered(ctx.graphics(), valueText(), sx, sy, FACE_W, H, 0xFFFFFFFF, true);
+            int color = isDisabled() ? 0xFF808080 : 0xFFFFFFFF;
+            MKText.renderCentered(ctx.graphics(), valueText(), sx, sy, FACE_W, H, color, true);
         }
 
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (isDisabled()) return false;
             if (!isHovered()) return false;
             if (capture != null) {
                 // Mouse buttons are valid chord keys mid-capture.
