@@ -79,7 +79,8 @@ public class ChordButton extends AbstractPanelElement<ChordButton> {
                 .tooltip(Component.translatable("keybindery.tooltip.show_conflicts"));
         this.reset = new Button(0, 0, ICON, ICON, Component.literal("↻"),
                 b -> KeybinderyAPI.getInstance().setChord(mapping, IChordKeyMapping.defaultChord(mapping)),
-                () -> Objects.equals(IChordKeyMapping.getChord(mapping), IChordKeyMapping.defaultChord(mapping)));
+                () -> Objects.equals(IChordKeyMapping.getChord(mapping), IChordKeyMapping.defaultChord(mapping)))
+                .tooltip(Component.translatable("keybindery.tooltip.reset_to_default"));
     }
 
     /** Optional text drawn left of the key, in MenuKit's default label colour. */
