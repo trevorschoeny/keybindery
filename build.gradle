@@ -72,6 +72,11 @@ repositories {
     maven { url 'https://api.modrinth.com/maven' }
 }
 
+// MenuKit 6.0.0 splits into main and client source sets (§0062). A project
+// dependency sees only main, so its client half is added by output (in the
+// client dependencies after loom {}), which needs MenuKit evaluated first.
+evaluationDependsOn(':menukit')
+
 dependencies {
     // 26.x: the game is unobfuscated — no mappings line, and mod deps use the
     // standard java configurations (modImplementation → implementation etc.).
@@ -79,19 +84,8 @@ dependencies {
     implementation "net.fabricmc:fabric-loader:${property('loader_version')}"
     implementation "net.fabricmc.fabric-api:fabric-api:${property('fabric_version')}"
 
-    // ModMenu — soft dep. compileOnly here means Keybindery compiles against
-    // ModMenu's API; the runtime-only line brings it into the dev launch so
-    // the in-game mod list shows Keybindery's config screen entry.
-    // 26.2 status: stable since 20.0.0 (2026-07-08); bumped to 20.0.1 on
-    // 2026-09-04. Keybindery's @Mixin(ModMenu.class) must hold against it.
-    compileOnly "com.terraformersmc:modmenu:20.0.1"
-    localRuntime "com.terraformersmc:modmenu:20.0.1"
-
-    // YACL — Keybindery's chosen config-screen framework. Bundled into
-    // Keybindery's jar via Loom's `include` (Jar-in-Jar), so players don't
-    // need to install YACL separately. `implementation` covers compile
-    // + dev runtime; `include` is what JIJs YACL into the release jar.
-    implementation "maven.modrinth:yacl:3.9.6+26.2-fabric"
+    // YACL: `include` JIJs it into the release jar; its compile line is a
+    // client dependency, after loom {}.
     include        "maven.modrinth:yacl:3.9.6+26.2-fabric"
 
     // @ApiStatus.Internal markers and similar annotations. compileOnly so
@@ -124,10 +118,24 @@ dependencies {
     // MenuKit — F4 controls-screen toolbar uses MK Dropdown widgets and
     // VanillaScreenPanelAdapter to host them on the vanilla KeyBindsScreen.
     // Hard dependency rather than soft because the toolbar is core to F4.
+    // MenuKit 6.0.0 is split (§0062): the project dep is its common half; the
+    // client half (Dropdown, panels, adapters) is added by output below.
     implementation project(':menukit')
 }
 
 loom {
+    // Keybindery is universal so universal mods that depend on it (Inventory
+    // Plus, Inventory Max) start on a dedicated server. All of Keybindery is
+    // client code in src/client; src/main holds only the empty common
+    // entrypoint. The compiler refuses a main class that reaches a client one.
+    splitEnvironmentSourceSets()
+    mods {
+        keybindery {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+
     // 26.2: KeyBindsList.KeyEntry's ctor went private; KeybinderyKeyEntry
     // subclasses it. See the .accesswidener file for the rationale.
     accessWidenerPath = file("src/main/resources/keybindery.accesswidener")
@@ -144,6 +152,26 @@ loom {
         }
         server { ideConfigGenerated = false }
     }
+}
+
+// Client-only dependencies, after loom {} so its client configurations exist.
+dependencies {
+    // MenuKit's client half, which the project dep above leaves out.
+    clientImplementation rootProject.project(':menukit').sourceSets.client.output
+
+    // ModMenu — soft dep. compileOnly means Keybindery compiles against
+    // ModMenu's API; localRuntime brings it into the dev launch so the in-game
+    // mod list shows Keybindery's config screen entry.
+    // 26.2 status: stable since 20.0.0 (2026-07-08); bumped to 20.0.1 on
+    // 2026-09-04. Keybindery's @Mixin(ModMenu.class) must hold against it.
+    clientCompileOnly "com.terraformersmc:modmenu:20.0.1"
+    localRuntime "com.terraformersmc:modmenu:20.0.1"
+
+    // YACL — Keybindery's chosen config-screen framework. Bundled into
+    // Keybindery's jar via Loom's `include` (Jar-in-Jar), so players don't
+    // need to install YACL separately. Compile + dev runtime
+    // here; the `include` above JIJs it into the release jar.
+    clientImplementation "maven.modrinth:yacl:3.9.6+26.2-fabric"
 }
 
 jar {
