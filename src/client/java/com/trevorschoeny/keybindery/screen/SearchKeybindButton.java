@@ -3,8 +3,9 @@ package com.trevorschoeny.keybindery.screen;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.trevorschoeny.keybindery.api.Chord;
 import com.trevorschoeny.keybindery.chord.ChordCapture;
-import com.trevlar.menukit.core.AbstractPanelElement;
-import com.trevlar.menukit.core.RenderContext;
+import com.trevlar.menukit.api.element.AbstractPanelElement;
+import com.trevlar.menukit.api.element.InputContext;
+import com.trevlar.menukit.api.element.RenderContext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
@@ -12,7 +13,6 @@ import net.minecraft.resources.Identifier;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import org.jspecify.annotations.Nullable;
 
 /**
  * F4 toolbar "Search Keybind" — chord-capture button. Click to enter
@@ -24,40 +24,31 @@ import org.jspecify.annotations.Nullable;
  * {@code KeyBindsScreen.keyPressed/mouseClicked} forward all subsequent
  * events to the active capture engine.
  */
-public class SearchKeybindButton extends AbstractPanelElement<SearchKeybindButton> {
+public class SearchKeybindButton extends AbstractPanelElement {
 
-    /** MK 2.0.0 self-typed-generic contract — chainable base setters
-     *  return the concrete subtype. */
-    @Override protected SearchKeybindButton self() { return this; }
-
-    private final int childX;
-    private final int childY;
-    private final int width;
-    private final int height;
     private final Supplier<Chord> chordGetter;
     private final Consumer<Chord> chordSetter;
     private final Component placeholder;
+    /** Shown on hover (not while capturing); MK 6 elements take it at construction. */
+    private final Component tooltip;
 
-    private boolean hovered = false;
     private ChordCapture capture;
 
     public SearchKeybindButton(int childX, int childY, int width, int height,
                                 Supplier<Chord> chordGetter,
                                 Consumer<Chord> chordSetter,
-                                Component placeholder) {
+                                Component placeholder,
+                                Component tooltip) {
+        // MK 6 no-builder subclass: set the base's geometry directly.
         this.childX = childX;
         this.childY = childY;
-        this.width = width;
+        this.width = this.authoredWidth = width;
         this.height = height;
+        this.tooltip = tooltip;
         this.chordGetter = chordGetter;
         this.chordSetter = chordSetter;
         this.placeholder = placeholder;
     }
-
-    @Override public int getChildX() { return childX; }
-    @Override public int getChildY() { return childY; }
-    @Override public int getWidth() { return width; }
-    @Override public int getHeight() { return height; }
 
     private boolean isCapturing() { return capture != null && capture.isCapturing(); }
 
@@ -76,7 +67,7 @@ public class SearchKeybindButton extends AbstractPanelElement<SearchKeybindButto
     public void render(RenderContext ctx) {
         int sx = ctx.originX() + childX;
         int sy = ctx.originY() + childY;
-        hovered = isHovered(ctx);
+        boolean hovered = isHovered(ctx);
 
         Identifier sprite;
         if (isCapturing()) sprite = SPRITE_CAPTURING;
@@ -95,14 +86,12 @@ public class SearchKeybindButton extends AbstractPanelElement<SearchKeybindButto
         // Hover-triggered tooltip — surfaces the right-click-to-clear hint
         // (otherwise non-discoverable). Skip while capturing — the preview
         // text is the user's feedback signal there.
-        @Nullable Supplier<Component> tt = getTooltipSupplier();
-        if (hovered && !isCapturing() && tt != null && ctx.hasMouseInput()) {
-            Component ttText = tt.get();
-            if (ttText != null) {
-                ctx.graphics().setTooltipForNextFrame(
-                        font, ttText, ctx.mouseX(), ctx.mouseY());
-            }
-        }
+        if (hovered && !isCapturing()) queueTooltip(ctx);
+    }
+
+    @Override
+    public Supplier<Component> tooltipSupplier() {
+        return () -> tooltip;
     }
 
     private Component labelFor() {
@@ -113,7 +102,7 @@ public class SearchKeybindButton extends AbstractPanelElement<SearchKeybindButto
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(InputContext in, int button) {
         if (button == 1) {
             if (isCapturing()) stopCapture();
             chordSetter.accept(Chord.UNBOUND);
@@ -131,7 +120,7 @@ public class SearchKeybindButton extends AbstractPanelElement<SearchKeybindButto
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(InputContext in, int button) {
         if (isCapturing()) {
             capture.onMouseReleased(InputConstants.Type.MOUSE.getOrCreate(button));
             return true;

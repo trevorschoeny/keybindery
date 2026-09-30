@@ -1,8 +1,9 @@
 package com.trevorschoeny.keybindery.screen;
 
-import com.trevlar.menukit.core.AbstractPanelElement;
-import com.trevlar.menukit.core.MKFocus;
-import com.trevlar.menukit.core.RenderContext;
+import com.trevlar.menukit.api.element.AbstractPanelElement;
+import com.trevlar.menukit.api.element.InputContext;
+import com.trevlar.menukit.api.panel.Focus;
+import com.trevlar.menukit.api.element.RenderContext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -14,7 +15,7 @@ import java.util.function.Supplier;
 
 /**
  * F4 toolbar search field — wraps vanilla {@link EditBox} as an MK
- * {@link com.trevlar.menukit.core.PanelElement}. Pattern parallels
+ * {@link com.trevlar.menukit.api.element.PanelElement}. Pattern parallels
  * MK's own {@code TextField}, but explicitly calls {@link Screen#setFocused}
  * in {@code mouseClicked} — required because {@code VanillaScreenPanelAdapter}
  * eats in-panel clicks before vanilla's Screen.mouseClicked can route them
@@ -24,16 +25,8 @@ import java.util.function.Supplier;
  * evidence once another consumer hits this), this class can fold into
  * TextField and disappear.
  */
-public class SearchBox extends AbstractPanelElement<SearchBox> {
+public class SearchBox extends AbstractPanelElement {
 
-    /** MK 2.0.0 self-typed-generic contract — chainable base setters
-     *  return the concrete subtype. */
-    @Override protected SearchBox self() { return this; }
-
-    private final int childX;
-    private final int childY;
-    private final int width;
-    private final int height;
     private final Component hint;
     private final Consumer<String> responder;
     /** Optional lens for the EditBox's value at each attach — lets the
@@ -55,19 +48,15 @@ public class SearchBox extends AbstractPanelElement<SearchBox> {
     public SearchBox(int childX, int childY, int width, int height,
                       Component hint, Consumer<String> responder,
                       @Nullable Supplier<String> initialValueSupplier) {
+        // MK 6 no-builder subclass: set the base's geometry directly.
         this.childX = childX;
         this.childY = childY;
-        this.width = width;
+        this.width = this.authoredWidth = width;
         this.height = height;
         this.hint = hint;
         this.responder = responder;
         this.initialValueSupplier = initialValueSupplier;
     }
-
-    @Override public int getChildX() { return childX; }
-    @Override public int getChildY() { return childY; }
-    @Override public int getWidth() { return width; }
-    @Override public int getHeight() { return height; }
 
     @Override
     public void render(RenderContext ctx) {
@@ -84,7 +73,7 @@ public class SearchBox extends AbstractPanelElement<SearchBox> {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(InputContext in, int button) {
         // The MK adapter eats in-panel clicks before vanilla's
         // Screen.mouseClicked can route them to children — so EditBox would
         // never get focus through the normal flow. Wire setFocused directly.
@@ -115,10 +104,10 @@ public class SearchBox extends AbstractPanelElement<SearchBox> {
         // Register for input dispatch (children + narratables) AND opt into
         // MK-managed focus semantics (the focus-janitor mixin clears focus
         // when the user clicks outside the EditBox's bounds anywhere on
-        // screen). MKFocus.addWidget wraps the underlying registration —
+        // screen). Focus.addWidget wraps the underlying registration —
         // no separate addRenderableWidget call needed (we render manually
         // in render() so the EditBox draws AFTER the panel background).
-        MKFocus.addWidget(screen, editBox);
+        Focus.addWidget(screen, editBox);
 
         // Populate the EditBox from the lens on every attach — the screen
         // (e.g. via openWithModFilterFor / openWithConflictsFilterFor)
@@ -136,7 +125,7 @@ public class SearchBox extends AbstractPanelElement<SearchBox> {
     public void onDetach(Screen screen) {
         if (attachedScreen == screen) {
             if (editBox != null) {
-                MKFocus.removeWidget(screen, editBox);
+                Focus.removeWidget(screen, editBox);
             }
             attachedScreen = null;
         }

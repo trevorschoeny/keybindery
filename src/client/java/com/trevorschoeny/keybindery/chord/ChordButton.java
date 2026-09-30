@@ -4,11 +4,15 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.trevorschoeny.keybindery.api.Chord;
 import com.trevorschoeny.keybindery.api.KeybinderyAPI;
 import com.trevorschoeny.keybindery.screen.KeybinderyKeyBindsScreen;
-import com.trevlar.menukit.core.AbstractPanelElement;
-import com.trevlar.menukit.core.Button;
-import com.trevlar.menukit.core.MKText;
-import com.trevlar.menukit.core.RenderContext;
-import com.trevlar.menukit.core.TextLabel;
+import com.trevlar.menukit.api.element.AbstractPanelElement;
+import com.trevlar.menukit.api.element.Button;
+import com.trevlar.menukit.api.element.ChildDispatch;
+import com.trevlar.menukit.api.element.ElementConstants;
+import com.trevlar.menukit.api.element.InputContext;
+import com.trevlar.menukit.api.element.PanelElement;
+import com.trevlar.menukit.api.element.RenderContext;
+import com.trevlar.menukit.api.element.Text;
+import com.trevlar.menukit.api.element.TextLabel;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -16,8 +20,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.Nullable;
 
+import java.util.List;
 import java.util.Objects;
-import java.util.function.BooleanSupplier;
 
 /**
  * MenuKit sibling of {@link ChordControllerWidget}: the in-config key button
@@ -25,8 +29,16 @@ import java.util.function.BooleanSupplier;
  * (it lives in main, not the api jar, so the api jar stays MenuKit-free).
  *
  * <pre>{@code
- * new ChordButton(SORT_KEY).label(Component.literal("Sort"))
+ * ChordButton.builder(SORT_KEY)
+ *         .label(Component.literal("Sort"))
+ *         .disabledWhen(() -> !sortEnabled)
+ *         .at(0, y)
+ *         .build()
  * }</pre>
+ *
+ * <p>Built like every MenuKit 6 element: the builder carries MenuKit's shared
+ * vocabulary ({@code at}, {@code disabledWhen}, {@code visibleWhen},
+ * {@code tooltip}, ...) plus {@link Builder#label}.
  *
  * <p>Layout, one row, 16px tall: {@code [label] [ chord ][⚠][↻]}. All three
  * buttons are plain MenuKit {@link Button}s in the default
@@ -43,15 +55,17 @@ import java.util.function.BooleanSupplier;
  *   <li><b>↻</b>: back to the mapping's default; greyed out when already there.</li>
  * </ul>
  *
+ * <p>Disabled ({@code disabledWhen}, or a disabled panel around it): the whole
+ * row greys and takes no input. The children don't each ask; the row hands
+ * them a disabled render/input context, which MenuKit elements honour.
+ *
  * <p>Capture: left-click starts it, press the chord, release to apply,
  * Escape cancels, Delete/Backspace unbinds, right-click unbinds. Applied chords
  * save straight away through {@link KeybinderyAPI#setChord} (MenuKit has no
- * pending/apply step). Constructing the element claims the mapping, like
+ * pending/apply step). Building the element claims the mapping, like
  * {@code createYACLChordOption} does.
  */
-public class ChordButton extends AbstractPanelElement<ChordButton> {
-
-    @Override protected ChordButton self() { return this; }
+public class ChordButton extends AbstractPanelElement {
 
     private static final int FACE_W = 108;
     private static final int ICON = 16;
@@ -62,52 +76,40 @@ public class ChordButton extends AbstractPanelElement<ChordButton> {
     private static final int LABEL_GAP = 4;
 
     private final KeyMapping mapping;
+    private final @Nullable TextLabel label;
     private final Face face;
     private final Button conflicts;
     private final Button reset;
-    private @Nullable TextLabel label;
-    /** Same text as {@link #label}, greyed, swapped in while {@link #isDisabled()}. */
-    private @Nullable TextLabel labelDisabled;
+    /** Label (if any), face, ⚠, ↻: the order ChildDispatch renders and routes. */
+    private final List<PanelElement> children;
 
     private @Nullable ChordCapture capture;
 
-    /** Set via {@link #disabledWhen}; null (default) means never disabled. */
-    private @Nullable BooleanSupplier disabledWhen;
+    public static Builder builder(KeyMapping mapping) {
+        return new Builder(mapping);
+    }
 
-    public ChordButton(KeyMapping mapping) {
-        this.mapping = mapping;
+    private ChordButton(Builder b) {
+        super(b);
+        this.mapping = b.mapping;
         KeybinderyAPI.getInstance().markClaimed(mapping);
+        // Plain label colour; the disabled grey comes from the context.
+        this.label = b.label == null ? null : TextLabel.builder().text(b.label).build();
         this.face = new Face();
-        this.conflicts = new Button(0, 0, ICON, ICON, Component.literal("⚠"),
-                b -> KeybinderyKeyBindsScreen.openWithConflictsFilterFor(
-                        mapping, Minecraft.getInstance().gui.screen()),
-                () -> isDisabled() || !ChordConflicts.hasAnyConflict(mapping))
-                .tooltip(Component.translatable("keybindery.tooltip.show_conflicts"));
-        this.reset = new Button(0, 0, ICON, ICON, Component.literal("↻"),
-                b -> KeybinderyAPI.getInstance().setChord(mapping, IChordKeyMapping.defaultChord(mapping)),
-                () -> isDisabled() || Objects.equals(IChordKeyMapping.getChord(mapping), IChordKeyMapping.defaultChord(mapping)))
-                .tooltip(Component.translatable("keybindery.tooltip.reset_to_default"));
-    }
-
-    /** Optional text drawn left of the key, in MenuKit's default label colour. */
-    public ChordButton label(Component text) {
-        this.label = new TextLabel(0, 0, text);
-        this.labelDisabled = new TextLabel(0, 0, text, 0xFF808080, false);
-        return this;
-    }
-
-    /**
-     * Greys out the key face, ⚠, ↻ and label, and blocks clicks/capture,
-     * while the supplier returns true. Read every frame; a capture already
-     * in progress is cancelled the frame this turns true.
-     */
-    public ChordButton disabledWhen(BooleanSupplier supplier) {
-        this.disabledWhen = supplier;
-        return this;
-    }
-
-    private boolean isDisabled() {
-        return disabledWhen != null && disabledWhen.getAsBoolean();
+        this.conflicts = Button.builder().size(ICON, ICON).label(Component.literal("⚠"))
+                .onClick(() -> KeybinderyKeyBindsScreen.openWithConflictsFilterFor(
+                        mapping, Minecraft.getInstance().gui.screen()))
+                .disabledWhen(() -> !ChordConflicts.hasAnyConflict(mapping))
+                .tooltip(Component.translatable("keybindery.tooltip.show_conflicts"))
+                .build();
+        this.reset = Button.builder().size(ICON, ICON).label(Component.literal("↻"))
+                .onClick(() -> KeybinderyAPI.getInstance().setChord(mapping, IChordKeyMapping.defaultChord(mapping)))
+                .disabledWhen(() -> Objects.equals(IChordKeyMapping.getChord(mapping), IChordKeyMapping.defaultChord(mapping)))
+                .tooltip(Component.translatable("keybindery.tooltip.reset_to_default"))
+                .build();
+        this.children = label == null
+                ? List.of(face, conflicts, reset)
+                : List.of(label, face, conflicts, reset);
     }
 
     // ── Geometry: children are positioned relative to this element's origin ──
@@ -118,21 +120,23 @@ public class ChordButton extends AbstractPanelElement<ChordButton> {
 
     @Override public int getWidth() { return labelW() + FACE_W + GAP + ICON + GAP + ICON; }
     @Override public int getHeight() { return H; }
+    // Fixed-size row: a Flow measures it as is and never stretches or squeezes it.
+    @Override public int naturalWidth() { return getWidth(); }
+    @Override public void layoutWithin(int budget) {}
+    @Override public void fillWidth(int width) {}
     @Override public boolean isInteractive() { return true; }
 
     /** Re-anchor the children on this element's current position (Flow may move it). */
     private void place() {
         int x = childX;
         if (label != null) {
-            int ly = childY + (H - Minecraft.getInstance().font.lineHeight) / 2 + 1;
-            label.at(x, ly);
-            labelDisabled.at(x, ly);
+            label.setChildPosition(x, childY + (H - Minecraft.getInstance().font.lineHeight) / 2 + 1);
             x += labelW();
         }
-        face.at(x, childY);
+        face.setChildPosition(x, childY);
         x += FACE_W + GAP;
-        conflicts.at(x, childY);
-        reset.at(x + ICON + GAP, childY);
+        conflicts.setChildPosition(x, childY);
+        reset.setChildPosition(x + ICON + GAP, childY);
     }
 
     @Override
@@ -140,30 +144,23 @@ public class ChordButton extends AbstractPanelElement<ChordButton> {
         place();
         // Disabled mid-capture (e.g. the owning tab just got toggled off):
         // drop it so the shared static capture state stops eating keys.
-        if (capture != null && isDisabled()) stopCapture();
-        if (label != null) (isDisabled() ? labelDisabled : label).render(ctx);
-        face.render(ctx);
-        conflicts.render(ctx);
-        reset.render(ctx);
+        if (capture != null && disabled(ctx)) stopCapture();
+        ChildDispatch.render(children, ctx.disabledIf(ownDisabled()));
         // Releases don't reach panel elements as key events; poll GLFW each
         // frame, exactly as the YACL widget does.
         if (capture != null) capture.pollReleases(Minecraft.getInstance().getWindow().handle());
     }
 
-    // ── Input: children gate on their own per-frame hover state ──────────
+    // ── Input: ChildDispatch hit-tests each child and skips all when disabled ──
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        return face.mouseClicked(mouseX, mouseY, button)
-                || conflicts.mouseClicked(mouseX, mouseY, button)
-                || reset.mouseClicked(mouseX, mouseY, button);
+    public boolean mouseClicked(InputContext in, int button) {
+        return ChildDispatch.mouseClicked(children, in.disabledIf(ownDisabled()), button);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        face.mouseReleased(mouseX, mouseY, button);
-        conflicts.mouseReleased(mouseX, mouseY, button);
-        reset.mouseReleased(mouseX, mouseY, button);
+    public boolean mouseReleased(InputContext in, int button) {
+        ChildDispatch.mouseReleased(children, in, button);
         if (capture != null) {
             capture.onMouseReleased(InputConstants.Type.MOUSE.getOrCreate(button));
             return true;
@@ -173,7 +170,7 @@ public class ChordButton extends AbstractPanelElement<ChordButton> {
 
     /** Keys are offered un-hit-tested to every element; only claim them mid-capture. */
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(InputContext in, int keyCode, int scanCode, int modifiers) {
         if (capture == null) return false;
         capture.onKeyPressed(keyCode == InputConstants.UNKNOWN.getValue()
                 ? InputConstants.Type.SCANCODE.getOrCreate(scanCode)
@@ -181,10 +178,17 @@ public class ChordButton extends AbstractPanelElement<ChordButton> {
         return true;
     }
 
+    /** The buttons register their focus/narration stand-ins with the screen. */
+    @Override
+    public void onAttach(Screen screen) {
+        ChildDispatch.attach(children, screen);
+    }
+
     /** Screen closing or rebuilding mid-capture: drop it so the static
      *  {@code activeCapture} can't hijack the next screen's keys. */
     @Override
     public void onDetach(Screen screen) {
+        ChildDispatch.detach(children, screen);
         stopCapture();
     }
 
@@ -228,19 +232,19 @@ public class ChordButton extends AbstractPanelElement<ChordButton> {
     /** The key face: a stock MK Button whose content is the live chord text. */
     private final class Face extends Button {
         Face() {
-            super(0, 0, FACE_W, H, Component.empty(), b -> {}, () -> ChordButton.this.isDisabled());
+            super(Button.builder().size(FACE_W, H));
         }
 
         @Override
-        protected void renderContent(RenderContext ctx, int sx, int sy) {
-            int color = isDisabled() ? 0xFF808080 : 0xFFFFFFFF;
-            MKText.renderCentered(ctx.graphics(), valueText(), sx, sy, FACE_W, H, color, true);
+        protected void renderContent(RenderContext ctx, int sx, int sy, Look look) {
+            int color = look.disabled() ? ElementConstants.TEXT_DISABLED : ElementConstants.TEXT_LIGHT;
+            Text.renderCentered(ctx.graphics(), valueText(), sx, sy, FACE_W, H, color, true);
         }
 
+        /** Reached only when hovered and enabled (ChildDispatch hit-tests first). */
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if (isDisabled()) return false;
-            if (!isHovered()) return false;
+        public boolean mouseClicked(InputContext in, int button) {
+            if (disabled(in)) return false;
             if (capture != null) {
                 // Mouse buttons are valid chord keys mid-capture.
                 capture.onMousePressed(InputConstants.Type.MOUSE.getOrCreate(button));
@@ -251,9 +255,31 @@ public class ChordButton extends AbstractPanelElement<ChordButton> {
                 return true;
             }
             if (button != 0) return false;
-            super.mouseClicked(mouseX, mouseY, button); // press affordance
+            super.mouseClicked(in, button); // press affordance + click sound
             startCapture();
             return true;
+        }
+    }
+
+    public static final class Builder extends AbstractPanelElement.Builder<ChordButton, Builder> {
+        private final KeyMapping mapping;
+        private @Nullable Component label;
+
+        private Builder(KeyMapping mapping) {
+            this.mapping = Objects.requireNonNull(mapping, "mapping");
+        }
+
+        @Override protected Builder self() { return this; }
+
+        /** Optional text drawn left of the key, in MenuKit's default label colour. */
+        public Builder label(Component text) {
+            this.label = Objects.requireNonNull(text, "text");
+            return this;
+        }
+
+        @Override
+        public ChordButton build() {
+            return new ChordButton(this);
         }
     }
 }

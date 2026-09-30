@@ -1,16 +1,16 @@
 package com.trevorschoeny.keybindery.screen;
 
 import com.trevorschoeny.keybindery.api.Chord;
-import com.trevlar.menukit.core.Button;
-import com.trevlar.menukit.core.ControlStyle;
-import com.trevlar.menukit.core.Dropdown;
-import com.trevlar.menukit.core.Panel;
-import com.trevlar.menukit.core.PanelElement;
-import com.trevlar.menukit.core.PanelPosition;
-import com.trevlar.menukit.core.PanelStyle;
-import com.trevlar.menukit.core.InsideRegion;
-import com.trevlar.menukit.core.TextLabel;
-import com.trevlar.menukit.inject.VanillaScreenPanelAdapter;
+import com.trevlar.menukit.api.element.Button;
+import com.trevlar.menukit.api.element.ControlStyle;
+import com.trevlar.menukit.api.element.Dropdown;
+import com.trevlar.menukit.api.panel.Panel;
+import com.trevlar.menukit.api.element.PanelElement;
+import com.trevlar.menukit.api.panel.PanelPosition;
+import com.trevlar.menukit.api.panel.PanelStyle;
+import com.trevlar.menukit.api.panel.InsideRegion;
+import com.trevlar.menukit.api.element.TextLabel;
+import com.trevlar.menukit.api.panel.VanillaScreenPanelAdapter;
 import net.minecraft.network.chat.Component;
 import net.minecraft.client.gui.screens.options.controls.KeybinderyKeyBindsList;
 
@@ -58,7 +58,7 @@ public final class ControlsToolbarPanel {
     private static final int FILTER_LABEL_X = SORT_X + SORT_W + 12;
     private static final int FILTER_X = FILTER_LABEL_X + 34; // after "Filter:" label
     /** Collapse All / Expand All — two buttons sharing one slot after the
-     *  filter dropdown; showWhen swaps between them. */
+     *  filter dropdown; visibleWhen swaps between them. */
     private static final int COLLAPSE_W = 80;
     private static final int COLLAPSE_X = FILTER_X + FILTER_W + 8;
 
@@ -90,94 +90,92 @@ public final class ControlsToolbarPanel {
                 CHORD_BTN_X, ROW1_Y, CHORD_BTN_W, ELEM_H,
                 ControlsToolbarPanel::getSearchChord,
                 ControlsToolbarPanel::setSearchChord,
-                Component.literal("Search Keybind..."));
-        chordBtn.tooltip(Component.literal(
-                "Click to bind a chord; right-click to clear."));
+                Component.literal("Search Keybind..."),
+                Component.literal("Click to bind a chord; right-click to clear."));
 
         // ── Row 2 ──────────────────────────────────────────────────────
         // Labels render at ROW2_Y; the row-height of 20 leaves the label
         // text vertically centered against the dropdown triggers.
         int labelTextY = ROW2_Y + (ELEM_H - 9) / 2; // 9 = font.lineHeight approx
-        TextLabel sortLabel = new TextLabel(
-                SORT_LABEL_X, labelTextY,
-                Component.literal("Sort:"),
-                TextLabel.COLOR_LIGHT, true);
+        TextLabel sortLabel = TextLabel.builder()
+                .at(SORT_LABEL_X, labelTextY)
+                .text(Component.literal("Sort:"))
+                .color(TextLabel.COLOR_LIGHT).shadow(true)
+                .build();
 
         Dropdown<SortOrder> sortDropdown = Dropdown.<SortOrder>builder()
                 .at(SORT_X, ROW2_Y)
-                .triggerSize(SORT_W, ELEM_H)
+                .size(SORT_W, ELEM_H)
                 .items(List.of(SortOrder.values()))
                 .label(SortOrder::display)
-                .selection(ControlsToolbarPanel::getSortOrder,
-                           ControlsToolbarPanel::setSortOrder)
+                .state(ControlsToolbarPanel::getSortOrder,
+                       ControlsToolbarPanel::setSortOrder)
                 .style(ControlStyle.VANILLA)
                 .build();
 
-        TextLabel filterLabel = new TextLabel(
-                FILTER_LABEL_X, labelTextY,
-                Component.literal("Filter:"),
-                TextLabel.COLOR_LIGHT, true);
+        TextLabel filterLabel = TextLabel.builder()
+                .at(FILTER_LABEL_X, labelTextY)
+                .text(Component.literal("Filter:"))
+                .color(TextLabel.COLOR_LIGHT).shadow(true)
+                .build();
 
         Dropdown<RowFilter> filterDropdown = Dropdown.<RowFilter>builder()
                 .at(FILTER_X, ROW2_Y)
-                .triggerSize(FILTER_W, ELEM_H)
+                .size(FILTER_W, ELEM_H)
                 .items(List.of(RowFilter.values()))
                 .label(RowFilter::display)
-                .selection(ControlsToolbarPanel::getRowFilter,
-                           ControlsToolbarPanel::setRowFilter)
+                .state(ControlsToolbarPanel::getRowFilter,
+                       ControlsToolbarPanel::setRowFilter)
                 .style(ControlStyle.VANILLA)
                 .build();
 
         // Collapse All / Expand All — MK Button's label is fixed at
         // construction, so the state flip is two buttons sharing one slot
-        // with complementary showWhen conditions. Both hide under flat
+        // with complementary visibleWhen conditions. Both hide under flat
         // sorts (no category headers to fold) and when no list is open.
-        Button collapseAllBtn = new Button(
-                COLLAPSE_X, ROW2_Y, COLLAPSE_W, ELEM_H,
-                Component.literal("Collapse All"),
-                btn -> {
+        Button collapseAllBtn = Button.builder()
+                .at(COLLAPSE_X, ROW2_Y).size(COLLAPSE_W, ELEM_H)
+                .label(Component.literal("Collapse All"))
+                .onClick(() -> {
                     KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();
                     if (l != null) l.collapseAllGroups();
                 })
                 .style(ControlStyle.VANILLA)
-                .showWhen(() -> {
+                .visibleWhen(() -> {
                     KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();
                     return l != null && l.getSortOrder() == SortOrder.BY_CATEGORY
                             && !l.allVisibleGroupsCollapsed();
-                });
+                })
+                .build();
 
-        Button expandAllBtn = new Button(
-                COLLAPSE_X, ROW2_Y, COLLAPSE_W, ELEM_H,
-                Component.literal("Expand All"),
-                btn -> {
+        Button expandAllBtn = Button.builder()
+                .at(COLLAPSE_X, ROW2_Y).size(COLLAPSE_W, ELEM_H)
+                .label(Component.literal("Expand All"))
+                .onClick(() -> {
                     KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();
                     if (l != null) l.expandAllGroups();
                 })
                 .style(ControlStyle.VANILLA)
-                .showWhen(() -> {
+                .visibleWhen(() -> {
                     KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();
                     return l != null && l.getSortOrder() == SortOrder.BY_CATEGORY
                             && l.allVisibleGroupsCollapsed();
-                });
+                })
+                .build();
 
-        // MK 18t made declaration order arbitrary — PanelDispatch runs a
-        // second renderOverlay pass for popovers, so they always paint on
-        // top regardless of sibling order. Order here is reader-friendly:
-        // row 1 first, row 2 left-to-right.
-        Panel toolbar = new Panel(
-                "keybindery-controls-toolbar",
-                List.<PanelElement>of(searchBox, chordBtn,
-                                       sortLabel, filterLabel,
-                                       collapseAllBtn, expandAllBtn,
-                                       sortDropdown, filterDropdown),
-                /*visible=*/ true,
-                PanelStyle.NONE,
-                PanelPosition.BODY,
-                /*toggleKey=*/ -1);
+        // Popovers paint in a second renderOverlay pass, so declaration order
+        // is free. Order here is reader-friendly: row 1 first, row 2
+        // left-to-right. MK 6.0.0 (§0065): placement lives on the panel.
+        Panel toolbar = Panel.builder("keybindery-controls-toolbar")
+                .elements(List.<PanelElement>of(searchBox, chordBtn,
+                                                sortLabel, filterLabel,
+                                                collapseAllBtn, expandAllBtn,
+                                                sortDropdown, filterDropdown))
+                .style(PanelStyle.NONE)
+                .position(PanelPosition.screenAnchor(InsideRegion.TOP_CENTER))
+                .build();
 
-        // InsideRegion — MK 2.0.0 folded the old VanillaScreenRegion enum
-        // into the unified region model (§0057); same nine anchors.
-        new VanillaScreenPanelAdapter(toolbar, InsideRegion.TOP_CENTER, /*padding=*/ 0)
+        new VanillaScreenPanelAdapter(toolbar, /*padding=*/ 0)
                 .on(KeybinderyKeyBindsScreen.class);
     }
 
