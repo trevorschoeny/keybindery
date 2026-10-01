@@ -12,7 +12,7 @@ The pause menu has a Keybinds button, next to the row of square buttons, that op
 
 The vanilla Key Binds menu gets a search box, a search-by-chord button, and sort and filter dropdowns along the top. Each row has a Conflicts icon, which jumps to the binds it clashes with, and a Reset icon. Long keybind names scroll.
 
-Keybindery runs on the client only. Servers don't need it.
+Keybindery installs on both client and server. On a server it does nothing by itself; it's there only because other mods that require it, like Inventory Plus and Inventory Max, load on servers too.
 
 ## Install
 
