@@ -8,6 +8,8 @@ You can bind a combination like `Ctrl + Shift + K` or `X + Z` to any keybind in 
 
 Every mod's keybinds appear on a "Keybinds" tab in that mod's config screen if it uses YACL, or behind a small "Keybinds" button on other config screens, so you don't have to dig through the Key Binds menu for one mod's bindings.
 
+A Keybinds button in the pause menu, next to the row of square buttons, opens the Key Binds menu in one click.
+
 The vanilla Key Binds menu gets a search box, a search-by-chord button, and sort and filter dropdowns along the top. Each row has a Conflicts icon, which jumps to the binds it clashes with, and a Reset icon. Long keybind names scroll.
 
 Keybindery runs on the client only. Servers don't need it.
@@ -20,7 +22,7 @@ Requires:
 - Minecraft 26.2 (this build)
 - Fabric Loader 0.19.5 or newer
 - Fabric API
-- MenuKit 5.0.0 or newer, below 6.0.0
+- MenuKit 6.0.0 or newer, below 7.0.0
 
 [YACL](https://modrinth.com/mod/yacl) 3.9.6 comes bundled, so there is no separate install.
 
@@ -33,6 +35,10 @@ Recommended: [Mod Menu](https://modrinth.com/mod/modmenu). The auto-listed-mod-k
 Open the Key Binds menu (Options, Controls, Key Binds). Click any row's chord button and press the chord you want: hold all the keys together, then release. The chord saves.
 
 To clear a binding, right-click the chord button during normal browsing, or press Delete or Backspace mid-capture. Press Escape mid-capture to cancel without changing anything.
+
+### Open your keybinds from the pause menu
+
+Press Escape in game. The Keybinds button is at the right end of the row of square buttons under Advancements and Statistics. Click it to open the Key Binds menu. Done takes you back to the pause menu.
 
 ### Find a mod's keybinds quickly
 
