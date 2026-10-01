@@ -1,4 +1,4 @@
-New Keybinds button in the pause menu. It sits at the right end of the row of square buttons (Report Bugs, Give Feedback, Friends, Player Reporting) and opens the Key Binds menu. Done takes you back to the pause menu.
+The pause menu has a new Keybinds button. It sits at the right end of the row of square buttons (Report Bugs, Give Feedback, Friends, Player Reporting) and opens the Key Binds menu. Done takes you back to the pause menu.
 
 Mods built on MenuKit can now put a chord button, with its Conflicts and Reset icons, in their own menus.
 

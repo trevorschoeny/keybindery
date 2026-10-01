@@ -8,7 +8,7 @@ You can bind a combination like `Ctrl + Shift + K` or `X + Z` to any keybind in 
 
 Every mod's keybinds appear on a "Keybinds" tab in that mod's config screen if it uses YACL, or behind a small "Keybinds" button on other config screens, so you don't have to dig through the Key Binds menu for one mod's bindings.
 
-A Keybinds button in the pause menu, next to the row of square buttons, opens the Key Binds menu in one click.
+The pause menu has a Keybinds button, next to the row of square buttons, that opens the Key Binds menu.
 
 The vanilla Key Binds menu gets a search box, a search-by-chord button, and sort and filter dropdowns along the top. Each row has a Conflicts icon, which jumps to the binds it clashes with, and a Reset icon. Long keybind names scroll.
 
