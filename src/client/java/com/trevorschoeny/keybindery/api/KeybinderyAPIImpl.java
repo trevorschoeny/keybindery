@@ -80,4 +80,10 @@ public final class KeybinderyAPIImpl implements KeybinderyAPI {
     public boolean isClaimed(KeyMapping mapping) {
         return ClaimRegistry.isClaimed(mapping);
     }
+
+    @Override
+    public boolean isHeld(KeyMapping mapping) {
+        long windowHandle = Minecraft.getInstance().getWindow().handle();
+        return getChord(mapping).isActiveHeld(windowHandle);
+    }
 }
