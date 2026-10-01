@@ -15,7 +15,8 @@
     "KeyboardChordPressMixin",
     "MinecraftSetScreenMixin",
     "OptionsChordPersistenceMixin",
-    "OptionsSubScreenAccessor"
+    "OptionsSubScreenAccessor",
+    "PauseScreenKeysButtonMixin"
   ],
   "injectors": {
     "defaultRequire": 1
