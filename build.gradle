@@ -78,7 +78,7 @@ dependencies {
 
     // YACL: `include` bundles it into the release jar; its compile line is a
     // client dependency, after loom {}.
-    include        "maven.modrinth:yacl:3.9.6+26.2-fabric"
+    include        "maven.modrinth:yacl:3.9.7+26.3-fabric"
 
     // @ApiStatus.Internal markers and similar annotations. compileOnly so
     // consumer mods don't depend on jetbrains-annotations at runtime through
@@ -156,13 +156,13 @@ dependencies {
     // mod list shows Keybindery's config screen entry. ModMenu has had stable
     // 26.2 builds since 20.0.0, and this is 20.0.1. Keybindery's
     // @Mixin(ModMenu.class) must keep working against it.
-    clientCompileOnly "com.terraformersmc:modmenu:20.0.1"
-    localRuntime "com.terraformersmc:modmenu:20.0.1"
+    clientCompileOnly "com.terraformersmc:modmenu:21.0.0"
+    localRuntime "com.terraformersmc:modmenu:21.0.0"
 
     // YACL, Keybindery's config-screen framework. Compile and dev runtime
     // here; the `include` above bundles it into the release jar (Jar-in-Jar),
     // so players don't need to install YACL separately.
-    clientImplementation "maven.modrinth:yacl:3.9.6+26.2-fabric"
+    clientImplementation "maven.modrinth:yacl:3.9.7+26.3-fabric"
 }
 
 jar {
