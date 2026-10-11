@@ -250,11 +250,11 @@ public class ChordButton extends AbstractPanelElement {
                 capture.onMousePressed(InputConstants.Type.MOUSE.getOrCreate(button));
                 return true;
             }
-            if (button == 1) {
+            if (button == InputConstants.MOUSE_BUTTON_RIGHT) {
                 KeybinderyAPI.getInstance().setChord(mapping, Chord.UNBOUND);
                 return true;
             }
-            if (button != 0) return false;
+            if (button != InputConstants.MOUSE_BUTTON_LEFT) return false;
             super.mouseClicked(in, button); // pressed look and click sound
             startCapture();
             return true;

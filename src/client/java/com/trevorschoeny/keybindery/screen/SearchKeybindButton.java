@@ -104,14 +104,14 @@ public class SearchKeybindButton extends AbstractPanelElement {
 
     @Override
     public boolean mouseClicked(InputContext in, int button) {
-        if (button == 1) {
+        if (button == InputConstants.MOUSE_BUTTON_RIGHT) {
             if (isCapturing()) stopCapture();
             chordSetter.accept(Chord.UNBOUND);
             return true;
         }
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             if (isCapturing()) {
-                capture.onMousePressed(InputConstants.Type.MOUSE.getOrCreate(0));
+                capture.onMousePressed(InputConstants.Type.MOUSE.getOrCreate(InputConstants.MOUSE_BUTTON_LEFT));
             } else {
                 startCapture();
             }

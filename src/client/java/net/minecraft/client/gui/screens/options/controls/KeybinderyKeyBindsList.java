@@ -358,7 +358,7 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
         @Override
         public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event,
                                     boolean doubleClick) {
-            if (event.button() != 0) return false;
+            if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) return false;
             if (!collapsedGroups.remove(groupKey)) {
                 collapsedGroups.add(groupKey);
             }

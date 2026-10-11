@@ -225,11 +225,11 @@ public class ChordControllerWidget extends ControllerWidget<ChordController> {
 
         // Right-click anywhere except the icons clears the chord (the same
         // right-click-to-unbind shortcut as the chord button).
-        if (event.button() == 1 && !overReset && !overConflicts) {
+        if (event.button() == InputConstants.MOUSE_BUTTON_RIGHT && !overReset && !overConflicts) {
             control.option().requestSet(Chord.UNBOUND);
             return true;
         }
-        if (event.button() != 0) return false;
+        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) return false;
 
         if (overReset) {
             if (resetButton.active) control.option().requestSetDefault();

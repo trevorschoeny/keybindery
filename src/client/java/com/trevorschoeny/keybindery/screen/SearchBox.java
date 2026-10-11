@@ -1,5 +1,6 @@
 package com.trevorschoeny.keybindery.screen;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.trevlar.menukit.api.element.AbstractPanelElement;
 import com.trevlar.menukit.api.element.InputContext;
 import com.trevlar.menukit.api.panel.Focus;
@@ -78,7 +79,7 @@ public class SearchBox extends AbstractPanelElement {
         // The MenuKit adapter takes in-panel clicks before vanilla's
         // Screen.mouseClicked can pass them to children, so the EditBox would
         // never get focus the normal way. Set focus directly.
-        if (attachedScreen != null && editBox != null && button == 0) {
+        if (attachedScreen != null && editBox != null && button == InputConstants.MOUSE_BUTTON_LEFT) {
             attachedScreen.setFocused(editBox);
         }
         return true;
