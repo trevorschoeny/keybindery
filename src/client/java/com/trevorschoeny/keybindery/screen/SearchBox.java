@@ -14,29 +14,30 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * F4 toolbar search field — wraps vanilla {@link EditBox} as an MK
- * {@link com.trevlar.menukit.api.element.PanelElement}. Pattern parallels
- * MK's own {@code TextField}, but explicitly calls {@link Screen#setFocused}
- * in {@code mouseClicked} — required because {@code VanillaScreenPanelAdapter}
- * eats in-panel clicks before vanilla's Screen.mouseClicked can route them
- * to widgets and set focus naturally.
+ * The toolbar's search field: wraps vanilla's {@link EditBox} as a MenuKit
+ * {@link com.trevlar.menukit.api.element.PanelElement}. Works like MenuKit's
+ * own {@code TextField}, but calls {@link Screen#setFocused} itself in
+ * {@code mouseClicked}, because {@code VanillaScreenPanelAdapter} takes
+ * in-panel clicks before vanilla's Screen.mouseClicked can pass them to
+ * widgets and set focus the usual way.
  *
- * <p>If MK's TextField grows that focus-on-click contract (likely fold-on-
- * evidence once another consumer hits this), this class can fold into
- * TextField and disappear.
+ * <p>If MenuKit's TextField gains focus-on-click (likely once another mod
+ * needs it), this class can be replaced by TextField.
  */
 public class SearchBox extends AbstractPanelElement {
 
     private final Component hint;
     private final Consumer<String> responder;
-    /** Optional lens for the EditBox's value at each attach — lets the
-     *  search box reflect a filter set externally (e.g. by
-     *  {@code openWithModFilterFor} populating the underlying list's
-     *  search query before the screen opens). Null = no auto-populate. */
+    /**
+     * Optional source for the EditBox's value on each attach, so the search box
+     * shows a filter set from outside (for example by {@code openWithModFilterFor}
+     * setting the list's search query before the screen opens). Null means the
+     * box starts empty.
+     */
     private final @Nullable Supplier<String> initialValueSupplier;
 
-    // Lazily constructed in onAttach — see the note there for why we can't
-    // construct it eagerly in the SearchBox constructor.
+    // Built in onAttach; the note there explains why it can't be built in the
+    // SearchBox constructor.
     private @Nullable EditBox editBox;
     private @Nullable Screen attachedScreen;
 
@@ -48,7 +49,7 @@ public class SearchBox extends AbstractPanelElement {
     public SearchBox(int childX, int childY, int width, int height,
                       Component hint, Consumer<String> responder,
                       @Nullable Supplier<String> initialValueSupplier) {
-        // MK 6 no-builder subclass: set the base's geometry directly.
+        // A MenuKit 6 subclass without a builder: set the base's geometry directly.
         this.childX = childX;
         this.childY = childY;
         this.width = this.authoredWidth = width;
@@ -74,9 +75,9 @@ public class SearchBox extends AbstractPanelElement {
 
     @Override
     public boolean mouseClicked(InputContext in, int button) {
-        // The MK adapter eats in-panel clicks before vanilla's
-        // Screen.mouseClicked can route them to children — so EditBox would
-        // never get focus through the normal flow. Wire setFocused directly.
+        // The MenuKit adapter takes in-panel clicks before vanilla's
+        // Screen.mouseClicked can pass them to children, so the EditBox would
+        // never get focus the normal way. Set focus directly.
         if (attachedScreen != null && editBox != null && button == 0) {
             attachedScreen.setFocused(editBox);
         }
@@ -87,13 +88,12 @@ public class SearchBox extends AbstractPanelElement {
     public void onAttach(Screen screen) {
         if (attachedScreen == screen) return;
         attachedScreen = screen;
-        // Lazy-construct the EditBox here, not in the SearchBox constructor.
-        // Reason: ControlsToolbarPanel.install() runs at Fabric onInitializeClient
-        // time, but Minecraft.getInstance().font is null at that point (font
-        // loads later in the client lifecycle). Caching that null font into
-        // a final EditBox.font field crashes on first render.
-        // onAttach fires only when a screen is open — font is guaranteed
-        // initialized by then.
+        // Build the EditBox here, not in the SearchBox constructor.
+        // ControlsToolbarPanel.install() runs during Fabric's onInitializeClient,
+        // when Minecraft.getInstance().font is still null (the font loads later).
+        // Storing that null in EditBox's final font field crashes on first
+        // render. onAttach only runs once a screen is open, by which time the
+        // font is loaded.
         if (editBox == null) {
             var font = Minecraft.getInstance().font;
             editBox = new EditBox(font, 0, 0, width, height,
@@ -101,20 +101,19 @@ public class SearchBox extends AbstractPanelElement {
             editBox.setHint(hint);
             editBox.setResponder(responder);
         }
-        // Register for input dispatch (children + narratables) AND opt into
-        // MK-managed focus semantics (the focus-janitor mixin clears focus
-        // when the user clicks outside the EditBox's bounds anywhere on
-        // screen). Focus.addWidget wraps the underlying registration —
-        // no separate addRenderableWidget call needed (we render manually
-        // in render() so the EditBox draws AFTER the panel background).
+        // Register for input (children and narratables) and for MenuKit's
+        // focus handling, which clears focus when the player clicks anywhere
+        // outside the EditBox. Focus.addWidget does the registration, so no
+        // addRenderableWidget call is needed (render() draws the EditBox
+        // itself, so it lands after the panel background).
         Focus.addWidget(screen, editBox);
 
-        // Populate the EditBox from the lens on every attach — the screen
-        // (e.g. via openWithModFilterFor / openWithConflictsFilterFor)
-        // pre-set the underlying list's search state before opening, so
-        // the visible search box now reflects that. Triggers the
-        // responder, which is a no-op when the list's query already
-        // equals the supplier's value (setSearchQuery dedups).
+        // Fill the EditBox from the supplier on every attach. The screen (for
+        // example through openWithModFilterFor or openWithConflictsFilterFor)
+        // set the list's search state before opening, and the search box
+        // should show it. This triggers the responder, which does nothing when
+        // the list's query already equals the value (setSearchQuery skips
+        // duplicates).
         if (initialValueSupplier != null) {
             String value = initialValueSupplier.get();
             editBox.setValue(value == null ? "" : value);

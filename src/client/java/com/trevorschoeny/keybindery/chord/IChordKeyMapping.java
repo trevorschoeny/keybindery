@@ -13,10 +13,9 @@ import net.minecraft.client.KeyMapping;
  *   Chord chord = ((IChordKeyMapping) someKeyMapping).keybindery$getChord();
  * </pre>
  *
- * <p>Migrated from MenuKit's {@code MKKeybindExt} (2026-05-18). The {@code MK*}
- * subclass-based approach ({@code MKKeyMapping}) was dropped — the mixin-on-
- * vanilla approach is universal and consumer-mod-agnostic, and the subclass
- * was unused downstream.
+ * <p>Moved here from MenuKit's {@code MKKeybindExt}. MenuKit's subclass
+ * approach ({@code MKKeyMapping}) was dropped: a mixin on vanilla works for
+ * every mod without them doing anything, and nothing used the subclass.
  */
 public interface IChordKeyMapping {
 
@@ -32,7 +31,7 @@ public interface IChordKeyMapping {
      */
     void keybindery$setChord(Chord chord);
 
-    // ── Convenience helpers (operate on any KeyMapping via the duck interface) ──
+    // Helpers that work on any KeyMapping through the duck interface.
 
     /**
      * Returns the effective chord for the given mapping. If a multi-key chord
@@ -40,13 +39,13 @@ public interface IChordKeyMapping {
      * mapping's single vanilla key as a one-key {@link Chord}, preserving the
      * original {@link InputConstants.Type} (KEYSYM, MOUSE, or SCANCODE).
      *
-     * <p>Type preservation matters: {@code Chord.ofKey(int)} always assumes
-     * KEYSYM type, which would coerce a MOUSE binding (left=0, right=1,
-     * middle=2) into a KEYSYM key with the same value. Vanilla's name
-     * fallback for those unknown KEYSYM values collides with the digit
-     * keys' names, producing spurious conflicts (Trev 2026-05-24 — left
-     * mouse vs hotbar 1, etc.). Wrapping the actual {@code Key} keeps the
-     * Type intact so the chord's name-based comparator distinguishes them.
+     * <p>Keeping the type matters: {@code Chord.ofKey(int)} always assumes
+     * KEYSYM, which would turn a MOUSE binding (left=0, right=1, middle=2)
+     * into a KEYSYM key with the same value. Vanilla's fallback name for those
+     * unknown KEYSYM values collides with the digit keys' names, which gave
+     * false conflicts (left mouse against hotbar 1, and so on). Wrapping the
+     * actual {@code Key} keeps the type, so the chord's name-based comparison
+     * tells them apart.
      */
     static Chord getChord(KeyMapping mapping) {
         Chord chord = ((IChordKeyMapping) mapping).keybindery$getChord();
@@ -63,20 +62,19 @@ public interface IChordKeyMapping {
     }
 
     /**
-     * Updates a KeyMapping's chord. Sets both the chord field (via duck
-     * interface) and vanilla's base key (so vanilla's internal key→mapping
-     * lookup still resolves), then rebuilds vanilla's map.
+     * Updates a KeyMapping's chord. Sets both the chord field (through the duck
+     * interface) and vanilla's base key (so vanilla's own key-to-mapping lookup
+     * still works), then rebuilds vanilla's map.
      */
     static void updateFromChord(KeyMapping mapping, Chord chord) {
         if (chord == null || chord.isUnbound()) {
             mapping.setKey(InputConstants.UNKNOWN);
             ((IChordKeyMapping) mapping).keybindery$setChord(Chord.UNBOUND);
         } else {
-            // Use primaryKey() — preserves InputConstants.Type so a chord
-            // whose primary is a MOUSE button stays MOUSE on the underlying
-            // KeyMapping (and serializes as e.g. key.mouse.left, not
-            // key.keyboard.0). The earlier path built KEYSYM from the
-            // int code and silently downgraded mouse bindings.
+            // primaryKey() keeps the InputConstants.Type, so a chord whose
+            // primary is a MOUSE button stays MOUSE on the KeyMapping (and
+            // saves as key.mouse.left, not key.keyboard.0). Building a KEYSYM
+            // from the int code instead silently broke mouse bindings.
             mapping.setKey(chord.primaryKey());
             ((IChordKeyMapping) mapping).keybindery$setChord(chord);
         }
@@ -84,16 +82,15 @@ public interface IChordKeyMapping {
     }
 
     /**
-     * Returns the keymapping's <b>default</b> chord — the chord state the
-     * user gets back when they press the Reset button. Wraps
-     * {@link KeyMapping#getDefaultKey()} as a single-key chord (preserving
-     * Type so a mouse-default like Attack stays MOUSE), or {@link Chord#UNBOUND}
-     * if the mapping was registered without a default key.
+     * Returns the key mapping's <b>default</b> chord, the one the player gets
+     * back from the Reset button. Wraps {@link KeyMapping#getDefaultKey()} as
+     * a single-key chord (keeping the type, so a mouse default like Attack
+     * stays MOUSE), or {@link Chord#UNBOUND} if the mapping has no default key.
      *
-     * <p>Used as the {@code .binding(default, ...)} arg on YACL options so
-     * YACL's "reset to default" semantics line up with vanilla's notion of
-     * a keymapping's default — without this helper, both call sites pass
-     * {@code Chord.UNBOUND} as the default, and reset becomes "clear."
+     * <p>Used as the {@code .binding(default, ...)} argument on YACL options so
+     * YACL's reset to default matches vanilla's idea of a key mapping's
+     * default. Without it, both call sites would pass {@code Chord.UNBOUND} as
+     * the default, and reset would clear the binding.
      */
     static Chord defaultChord(KeyMapping mapping) {
         if (mapping == null) return Chord.UNBOUND;

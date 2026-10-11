@@ -3,22 +3,23 @@ package com.trevorschoeny.keybindery.screen;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Thread-local marker carrying the mod-ID of whichever mod is currently
- * constructing a YACL screen. Set by
+ * Thread-local holding the mod ID of whichever mod is building a YACL screen
+ * right now. Set by
  * {@link com.trevorschoeny.keybindery.mixin.ModMenuConfigScreenMixin} at
  * the HEAD of ModMenu's {@code getConfigScreen(modId, parent)} and cleared
  * at RETURN. Read by
  * {@link com.trevorschoeny.keybindery.mixin.YACLBuilderInjectMixin} at
- * YACL Builder {@code build()} HEAD to inject the auto-Keybinds category.
+ * the HEAD of YACL Builder's {@code build()} to add the automatic Keybinds
+ * category.
  *
- * <p>Thread-local rather than a static field because the YACL build might
- * (in theory) happen on different threads, and ModMenu→factory→YACL.build
- * is a synchronous call chain on whichever thread invoked it.
+ * <p>A thread-local rather than a static field because the YACL build could
+ * in theory happen on different threads, and the ModMenu to factory to
+ * YACL.build chain is synchronous on whichever thread started it.
  *
- * <p>When the thread-local is unset (ModMenu absent, or a YACL screen
- * opened via a path that bypasses ModMenu — keybind, button, command),
- * the YACL Builder mixin falls back to a stack-walk-and-classpath-match
- * mod-ID inference. See that mixin for details.
+ * <p>When it is unset (no ModMenu, or a YACL screen opened some other way,
+ * such as a keybind, button or command), the YACL Builder mixin works out the
+ * mod ID by walking the stack and matching class paths instead. See that
+ * mixin for details.
  */
 public final class CurrentModContext {
 

@@ -22,18 +22,18 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Keybindery's filter/sort-capable replacement for vanilla's
- * {@link KeyBindsList}. Lives in vanilla's package so it can construct
- * vanilla's package-private {@code KeyEntry} subclass directly — that's
- * the entry shape vanilla's controls screen knows how to render.
+ * Keybindery's replacement for vanilla's {@link KeyBindsList}, which can filter
+ * and sort. It lives in vanilla's package so it can construct vanilla's
+ * package-private {@code KeyEntry} subclass directly, the entry type vanilla's
+ * controls screen knows how to render.
  *
- * <p>Filter/sort state is owned here (search query, sort order, row
- * filter, search-chord keys). Setters refresh the entries list.
+ * <p>The filter and sort state lives here (search query, sort order, row
+ * filter, search-chord keys). The setters refresh the entries.
  *
- * <p>MISC fix: vanilla dumps every uncategorized keybind into the
- * "MISC" category. {@link #refreshEntries} groups MISC entries by mod
- * id (extracted from the keymapping name's namespace) so players see
- * "Movement / Inventory / [Mod A] / [Mod B]" instead of one mega-MISC.
+ * <p>The MISC fix: vanilla puts every uncategorized keybind in the "MISC"
+ * category. {@link #refreshEntries} splits MISC by mod id (taken from the key
+ * mapping name's namespace), so players see "Movement / Inventory / [Mod A] /
+ * [Mod B]" instead of one huge MISC section.
  */
 public class KeybinderyKeyBindsList extends KeyBindsList {
 
@@ -42,25 +42,28 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
     private String searchQuery = "";
     private SortOrder sortOrder = SortOrder.BY_CATEGORY;
     private RowFilter rowFilter = RowFilter.NONE;
-    /** OR-semantics: any row whose chord shares ≥1 key with this set passes.
-     *  Driven by the toolbar's Search Keybind chord-capture button. */
+    /**
+     * Any row whose chord shares at least one key with this set passes. Set by
+     * the toolbar's Search Keybind button.
+     */
     private final Set<InputConstants.Key> searchChordKeys = new HashSet<>();
 
-    /** Group keys the user has collapsed by clicking the category header.
-     *  STATIC — vanilla recreates the whole screen (and this list) on
-     *  window resize; session-scoped state keeps the user's collapse
-     *  choices across that. Not persisted to disk: collapse is a browsing
-     *  gesture, not a setting. */
+    /**
+     * Groups the player has collapsed by clicking the category header. Static,
+     * because vanilla rebuilds the whole screen (and this list) when the window
+     * is resized, and the collapsed groups should survive that for the session.
+     * Not saved to disk: collapsing is part of browsing, not a setting.
+     */
     private static final Set<String> collapsedGroups = new HashSet<>();
 
     public KeybinderyKeyBindsList(KeyBindsScreen screen, Minecraft mc) {
         super(screen, mc);
-        // Default 20px row height — KeybinderyKeyEntry uses a one-row
-        // layout (name on left, chord + Conflicts/Reset icons on right)
-        // so vanilla's height is correct.
+        // Vanilla's default 20px row height is right, since KeybinderyKeyEntry
+        // is one row (name on the left, chord and the Conflicts and Reset
+        // icons on the right).
     }
 
-    // ── Filter/sort state setters (refresh + scroll-to-top on change) ──────
+    // Filter and sort setters. A change refreshes and scrolls to the top.
 
     public void setSearchQuery(String query) {
         if (query == null) query = "";
@@ -95,10 +98,9 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
         refreshAndScrollToTop();
     }
 
-    /** Filter/sort change just changed what rows the user sees — keeping
-     *  their old scroll offset would leave them looking at the middle of
-     *  a possibly-shorter (or differently-ordered) list. Reset to top so
-     *  the new filter result is immediately visible. */
+    // A filter or sort change changes which rows the player sees. Keeping the
+    // old scroll offset would leave them in the middle of a possibly shorter
+    // or reordered list, so scroll to the top to show the new result at once.
     private void refreshAndScrollToTop() {
         refreshEntries();
         setScrollAmount(0);
@@ -112,10 +114,10 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
     public SortOrder getSortOrder() { return sortOrder; }
     public RowFilter getRowFilter() { return rowFilter; }
 
-    // ── Collapse-all / expand-all (toolbar button) ──────────────────────────
-    // Scoped to VISIBLE groups (those with ≥1 mapping passing the current
-    // filter) — "collapse all" folds what the user is looking at; groups
-    // hidden by a filter keep their individual state.
+    // Collapse All and Expand All (toolbar button). They only touch visible
+    // groups (those with at least one mapping passing the current filter):
+    // "collapse all" folds what the player is looking at, and groups hidden by
+    // a filter keep their own state.
 
     public void collapseAllGroups() {
         collapsedGroups.addAll(visibleGroupKeys());
@@ -127,9 +129,11 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
         refreshEntries();
     }
 
-    /** True iff every currently-visible group is collapsed — drives the
-     *  toolbar's Collapse All ↔ Expand All button swap. False when nothing
-     *  is visible (button hides itself elsewhere on empty lists). */
+    /**
+     * True if every visible group is collapsed; decides whether the toolbar
+     * shows Collapse All or Expand All. False when nothing is visible (the
+     * button hides itself on empty lists anyway).
+     */
     public boolean allVisibleGroupsCollapsed() {
         Set<String> keys = visibleGroupKeys();
         return !keys.isEmpty() && collapsedGroups.containsAll(keys);
@@ -145,8 +149,6 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
         return keys;
     }
 
-    // ── Entry rebuild ────────────────────────────────────────────────────────
-
     @Override
     public void refreshEntries() {
         Minecraft mc = this.minecraft;
@@ -157,7 +159,6 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
 
         this.clearEntries();
 
-        // Collect filtered keymappings.
         List<KeyMapping> filtered = new ArrayList<>();
         for (KeyMapping km : mc.options.keyMappings) {
             if (passesFilter(km)) filtered.add(km);
@@ -172,21 +173,21 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
     }
 
     private boolean passesFilter(KeyMapping km) {
-        // Search by name + category label (name-only is fine for v1; the
-        // search-by-chord case is handled separately by searchChordKeys).
+        // Search by name and category label. Searching by chord is handled
+        // separately, by searchChordKeys.
         if (!searchQuery.isEmpty()) {
             String name = Component.translatable(km.getName()).getString().toLowerCase();
             String category = km.getCategory().label().getString().toLowerCase();
             if (!name.contains(searchQuery) && !category.contains(searchQuery)) return false;
         }
-        // Single-select row filter — None / Conflicts / Not Bound.
+        // Single-choice row filter: None, Conflicts or Not Bound.
         switch (rowFilter) {
             case CONFLICTS -> { if (!ChordConflicts.hasAnyConflict(km)) return false; }
             case FREE_KEYS -> { if (!km.isUnbound()) return false; }
             case NONE -> {}
         }
-        // Search-chord filter (OR semantics): chord shares at least one key
-        // with the captured search chord. Empty set = no filtering.
+        // Search-chord filter: the chord must share at least one key with the
+        // captured search chord. An empty set means no filtering.
         if (!searchChordKeys.isEmpty()) {
             Chord chord = IChordKeyMapping.getChord(km);
             if (chord.isUnbound()) return false;
@@ -217,9 +218,9 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
     }
 
     private void renderByCategory(List<KeyMapping> mappings) {
-        // Group mappings by category, with MISC fix: subdivide MISC by mod id.
+        // Group mappings by category, with the MISC fix: MISC is split by mod id.
         Map<String, List<KeyMapping>> groups = new LinkedHashMap<>();
-        // First pass: gather vanilla category groups in vanilla's existing order.
+        // First pass: collect the groups in vanilla's existing order.
         for (KeyMapping km : mappings) {
             String groupKey = groupKeyFor(km);
             groups.computeIfAbsent(groupKey, k -> new ArrayList<>()).add(km);
@@ -230,9 +231,9 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
             List<KeyMapping> groupMappings = e.getValue();
             // Sort within the group alphabetically for readability.
             groupMappings.sort(Comparator.comparing(m -> Component.translatable(m.getName()).getString()));
-            // Category header — one clickable, collapsible entry type for
-            // both real vanilla categories and synthesized mod-id groups
-            // (MISC fix); only the label source differs.
+            // Category header: one clickable, collapsible entry type for both
+            // real vanilla categories and the mod-id groups made by the MISC
+            // fix; only where the label comes from differs.
             KeyMapping.Category cat = vanillaCategoryFor(groupMappings.get(0), groupKey);
             Component label = cat != null ? cat.label() : Component.literal(groupKey);
             addEntry(new CollapsibleCategoryEntry(label, groupKey));
@@ -246,13 +247,13 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
     }
 
     /**
-     * Group key for a keymapping: vanilla category label normally, but for
-     * MISC-categorized keybinds, derive a mod-id-based group so a wall of
-     * unrelated mod keybinds doesn't pile into one section.
+     * Group key for a key mapping: normally the vanilla category label, but for
+     * keybinds in MISC, a group based on the mod id, so unrelated mods'
+     * keybinds don't all pile into one section.
      */
     private static String groupKeyFor(KeyMapping km) {
         KeyMapping.Category cat = km.getCategory();
-        // Vanilla MISC category? Use the keymap's namespace as the group.
+        // In vanilla's MISC category, use the key mapping's namespace as the group.
         String catLabel = cat.label().getString();
         boolean isMisc = isMiscCategory(cat);
         if (isMisc) {
@@ -263,10 +264,10 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
     }
 
     private static boolean isMiscCategory(KeyMapping.Category category) {
-        // The vanilla MISC category's label is registered via the lang key
-        // "key.categories.misc". Translation produces "Miscellaneous" in en_us
-        // but the .toString() of the Component contains the key form too in
-        // some cases. Compare the raw label key.
+        // Vanilla's MISC category label uses the lang key "key.categories.misc".
+        // It translates to "Miscellaneous" in en_us, but the Component's
+        // .toString() sometimes contains the key form too, so compare the raw
+        // label key.
         Component label = category.label();
         if (label.getContents() instanceof net.minecraft.network.chat.contents.TranslatableContents tc) {
             return MISC_CATEGORY_LABEL_KEY.equals(tc.getKey());
@@ -275,10 +276,10 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
     }
 
     /**
-     * Extract a human-readable mod id from a keymapping name. Names look
-     * like "key.modname.action" (Fabric convention) or "key.action" (vanilla).
-     * The middle segment is the namespace; we titlecase it for display.
-     * Returns null if no namespace can be derived.
+     * A readable mod id from a key mapping name. Names look like
+     * "key.modname.action" (Fabric convention) or "key.action" (vanilla). The
+     * middle part is the namespace, capitalized for display. Returns null if
+     * there is no namespace.
      */
     private static @Nullable String modIdFromKeymapName(String name) {
         if (name == null) return null;
@@ -288,14 +289,13 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
         if (dot <= 0) return null;
         String namespace = body.substring(0, dot);
         if (namespace.isEmpty()) return null;
-        // Titlecase first letter for display.
         return Character.toUpperCase(namespace.charAt(0)) + namespace.substring(1);
     }
 
     /**
-     * For groups that came from a real vanilla category, return that
-     * KeyMapping.Category so we use the same CategoryEntry rendering.
-     * For mod-id synthetic groups, return null and we'll render our own.
+     * For groups that came from a real vanilla category, returns that
+     * KeyMapping.Category so its own label is used. For the mod-id groups,
+     * returns null and the group key is used as the label.
      */
     private static @Nullable KeyMapping.Category vanillaCategoryFor(KeyMapping representative, String groupKey) {
         KeyMapping.Category cat = representative.getCategory();
@@ -305,25 +305,25 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
 
     private void addKeyEntry(KeyMapping km) {
         Component name = Component.translatable(km.getName());
-        // Default 20px row height — KeybinderyKeyEntry is one row.
+        // Default 20px row height; KeybinderyKeyEntry is one row.
         addEntry(new KeybinderyKeyEntry(this, km, name));
     }
 
     /**
-     * Clickable, collapsible category header — used for BOTH real vanilla
-     * categories and MISC-fix mod-id groups (label source differs; behavior
-     * is identical). Replaces vanilla's {@code CategoryEntry} (read-only
-     * centered text) with:
+     * Clickable, collapsible category header, used for both real vanilla
+     * categories and the MISC fix's mod-id groups (only the label source
+     * differs). Replaces vanilla's {@code CategoryEntry} (plain centered text)
+     * with:
      *
      * <ul>
-     *   <li>a ▼ (expanded) / ▶ (collapsed) indicator before the label</li>
-     *   <li>click-to-toggle — collapsing hides the group's key rows,
-     *       preserving scroll position (no jump-to-top; this is a browsing
-     *       gesture, not a filter change)</li>
+     *   <li>a ▼ (expanded) or ▶ (collapsed) marker before the label</li>
+     *   <li>click to toggle: collapsing hides the group's key rows and keeps
+     *       the scroll position (no jump to the top, since this is browsing,
+     *       not a filter change)</li>
      * </ul>
      *
-     * <p>Non-static so it can be a vanilla-inner-class peer (gets the outer
-     * KeyBindsList implicitly).
+     * <p>Non-static, like vanilla's inner entry classes, so it gets the outer
+     * KeyBindsList implicitly.
      */
     private class CollapsibleCategoryEntry extends KeyBindsList.Entry {
         private final Component label;
@@ -339,20 +339,22 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
                                   int mouseX, int mouseY, boolean hovered, float partialTick) {
             Minecraft mc = Minecraft.getInstance();
             boolean collapsed = collapsedGroups.contains(groupKey);
-            // Indicator + label as one centered string, vertically centered
-            // in the 20px row. Position derives from the entry's CONTENT
-            // rect — the int params are mouse coordinates, not origins.
+            // Marker and label as one centered string, vertically centered in
+            // the 20px row. The position comes from the entry's content rect;
+            // the int parameters are mouse coordinates, not origins.
             Component headerText = Component.literal(collapsed ? "▶ " : "▼ ")
                     .append(label);
             int centerX = this.getContentX() + this.getContentWidth() / 2;
             int textY = this.getContentY() + (this.getContentHeight() - 9) / 2;
-            // Subtle hover tint invites the click.
+            // A light tint on hover shows it can be clicked.
             int color = hovered ? 0xFFFFFFA0 : 0xFFFFFFFF;
             graphics.centeredText(mc.font, headerText, centerX, textY, color);
         }
 
-        /** Toggle collapse on left-click. The list's click dispatch already
-         *  hit-tested the row, so any click landing here is ours. */
+        /**
+         * Toggles collapse on left-click. The list already hit-tested the row,
+         * so any click that reaches here is on this header.
+         */
         @Override
         public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event,
                                     boolean doubleClick) {
@@ -362,9 +364,8 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
             }
             net.minecraft.client.gui.components.AbstractWidget.playButtonClickSound(
                     Minecraft.getInstance().getSoundManager());
-            // Plain refresh — deliberately NOT refreshAndScrollToTop; the
-            // user is folding a section in place, not changing what the
-            // list is filtered to.
+            // A plain refresh, deliberately not refreshAndScrollToTop: the
+            // player is folding a section in place, not changing the filter.
             refreshEntries();
             return true;
         }

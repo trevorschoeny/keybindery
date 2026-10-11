@@ -1,33 +1,25 @@
-// ═══════════════════════════════════════════════════════════════════════════
-// Keybindery — hybrid library + consumer mod for chord keybinds and keybind
-// UX. Established as a sub-unit of @ Trevlar Mods per §0030. Sibling to
-// MenuKit and MKC under the same domain-partition logic (§0042):
-//   :menukit            → UI library
-//   :menukit-containers → slot extension
-//   :keybindery         → input augmentation + keybind UX (this artifact)
+// Keybindery: a library and a mod in one, for chord keybinds and the keybind
+// screens. It sits beside MenuKit and MenuKit: Containers:
+//   :menukit            UI library
+//   :menukit-containers slot extension
+//   :keybindery         input and keybind screens (this project)
 //
-// v1.0.0 scope:
-//   F1 — In-config keybind API for consumer mods (UI-lib-agnostic, silent-fail)
-//   F2 — Auto-append fallback in vanilla / ModMenu / Cloth Config screens
-//   F3 — Chord-for-any-keymapping (vanilla mixin into KeyMapping)
-//   F4 — Controls-screen overhaul (search, sort, filter, MISC fix)
+// What it does:
+//   - an in-config keybind API for other mods (works with any UI library, and
+//     does nothing when Keybindery is absent)
+//   - a fallback that appends keybinds to vanilla, ModMenu and Cloth Config screens
+//   - chords for any key mapping (a vanilla mixin into KeyMapping)
+//   - a reworked Controls screen (search, sort, filter, the MISC fix)
 //
-// Per §0003 (this unit's canon): vanilla mixins may use
-// @Inject(at=HEAD, cancellable=true) followed by ci.cancel() as a
-// §0030-compliant alternative to @Overwrite.
+// Vanilla mixins may use @Inject(at=HEAD, cancellable=true) followed by
+// ci.cancel() instead of @Overwrite.
 //
-// Section 1a (Imp's first commit): scaffolding only — mod loads in MC dev
-// runtime with no chord logic yet. F3 work imports from MK's existing
-// chord-keybind implementation (per Trev's migration directive, 2026-05-18).
-//
-// Workspace integration: included from the root settings.gradle as
-// `:keybindery`. Build with `./gradlew :keybindery:build`. Test with
-// `./gradlew :keybindery:runClient`.
-// ═══════════════════════════════════════════════════════════════════════════
+// Included from the root settings.gradle as `:keybindery`. Build with
+// `./gradlew :keybindery:build`. Test with `./gradlew :keybindery:runClient`.
 
 plugins {
-    // 26.x migration (2026-07-02): Loom plugin id is namespaced at 1.15+;
-    // 1.17 is the 26.2-era line. Version pinned at the workspace root.
+    // The Loom plugin id is namespaced from 1.15 on; 1.17 is the line for 26.2.
+    // The version is pinned at the workspace root.
     id 'net.fabricmc.fabric-loom' version '1.17-SNAPSHOT'
     id 'java'
     id 'com.modrinth.minotaur' version '2.+'
@@ -39,12 +31,12 @@ group   = property('maven_group')
 base.archivesName = 'keybindery'
 
 // Stamp the real mod version into fabric.mod.json at build time. The version
-// used to be HARDCODED "1.0.0" in the manifest — bumping the gradle version
-// property renamed the JAR but the loader (which reads fabric.mod.json) still
-// saw 1.0.0, so every published artifact self-reported 1.0.0 and no versioned
-// dependency gate could ever be satisfied (the 2026-07-01 Keybindery boot
-// wall). fabric.mod.json now declares "version": "${version}" and this block
-// expands it from the project version — one source of truth.
+// used to be hardcoded as "1.0.0" in the manifest: bumping the Gradle version
+// property renamed the jar, but the loader (which reads fabric.mod.json) still
+// saw 1.0.0, so every published jar reported 1.0.0 and no versioned dependency
+// on Keybindery could ever be met, which stopped dependent mods from booting.
+// fabric.mod.json now declares "version": "${version}" and this block expands
+// it from the project version, so there is one source of truth.
 processResources {
     inputs.property "version", project.version
     filesMatching("fabric.mod.json") {
@@ -60,65 +52,65 @@ java {
 
 repositories {
     maven { url 'https://maven.fabricmc.net/' }
-    // ModMenu — surfaces Keybindery's own YACL config screen on the mods
-    // list. Optional at runtime; declared compileOnly here so consumers
-    // can omit ModMenu without crashing Keybindery.
+    // ModMenu shows Keybindery's own YACL config screen in the mods list.
+    // Optional at runtime; it is compileOnly so players can leave ModMenu out
+    // without crashing Keybindery.
     maven { url 'https://maven.terraformersmc.com/releases/' }
-    // YACL — config-screen framework used for Keybindery's own settings
-    // (Simultaneous Mode toggle + window). JIJ'd via Loom's `include` so
-    // players install Keybindery and YACL comes along bundled.
-    // 26.x: isxander's own maven stops at the 3.8.x line; the 26.2 builds
-    // (3.9.x) ship via the Modrinth maven only (verified 2026-07-02).
+    // YACL is the config-screen framework for Keybindery's own settings (the
+    // Simultaneous Mode toggle and window). It is bundled with Loom's
+    // `include`, so players install Keybindery and get YACL with it.
+    // isxander's own Maven stops at the 3.8.x line; the 26.2 builds (3.9.x)
+    // are only on this Maven repository.
     maven { url 'https://api.modrinth.com/maven' }
 }
 
-// MenuKit 6.0.0 splits into main and client source sets (§0062). A project
+// Since 6.0.0 MenuKit has separate main and client source sets. A project
 // dependency sees only main, so its client half is added by output (in the
 // client dependencies after loom {}), which needs MenuKit evaluated first.
 evaluationDependsOn(':menukit')
 
 dependencies {
-    // 26.x: the game is unobfuscated — no mappings line, and mod deps use the
-    // standard java configurations (modImplementation → implementation etc.).
+    // 26.x: the game is unobfuscated, so there is no mappings line, and mod deps
+    // use the standard Java configurations (implementation, not modImplementation).
     minecraft "com.mojang:minecraft:${property('minecraft_version')}"
     implementation "net.fabricmc:fabric-loader:${property('loader_version')}"
     implementation "net.fabricmc.fabric-api:fabric-api:${property('fabric_version')}"
 
-    // YACL: `include` JIJs it into the release jar; its compile line is a
+    // YACL: `include` bundles it into the release jar; its compile line is a
     // client dependency, after loom {}.
     include        "maven.modrinth:yacl:3.9.6+26.2-fabric"
 
     // @ApiStatus.Internal markers and similar annotations. compileOnly so
-    // consumer mods don't transitively depend on jetbrains-annotations at
-    // runtime — the annotations are doc/IDE signals only.
+    // consumer mods don't depend on jetbrains-annotations at runtime through
+    // Keybindery. The annotations are only for docs and the IDE.
     compileOnly 'org.jetbrains:annotations:24.1.0'
 
-    // Keybindery API (F1) — separate jar holding the public, UI-library-
-    // agnostic interface and the Chord value class. Used via `api` config
-    // so consumer mods depending on :keybindery transitively get the api
-    // types in scope, matching what they'd get from `modCompileOnly` on
-    // keybindery-api directly. Per Trev's silent-fail directive, consumer
-    // mods can depend on keybindery-api ALONE for compile-time access
-    // without bundling keybindery main at runtime.
-    // (26.x: the remap layer is gone, so the `namedElements` variant no
-    // longer exists — a plain project dep is THE artifact now.)
+    // Keybindery API: a separate jar with the public interface (independent
+    // of any UI library) and the Chord value class. Added through the `api`
+    // configuration, so consumer mods that depend on :keybindery also get the
+    // api types, the same as `modCompileOnly` on keybindery-api directly.
+    // Consumer mods can depend on keybindery-api alone for compile-time
+    // access without bundling Keybindery itself, and the API does nothing at
+    // runtime when Keybindery is missing, so they never crash without it.
+    // (26.x has no remapping, so the `namedElements` variant is gone and a
+    // plain project dep is the real artifact.)
     api project(':keybindery-api')
 
-    // JIJ keybindery-api so a player who installs only keybindery (main)
-    // jar gets the api types and the YACL widget code path at runtime
-    // without needing a separate keybindery-api download. (Consumer mods
-    // that ALSO JIJ keybindery-api: Fabric handles duplicate-mod-id by
-    // picking the newest version — safe.)
+    // Bundle keybindery-api so a player who installs only the Keybindery jar
+    // gets the api types and the YACL widget code at runtime, without a
+    // separate keybindery-api download. (If a consumer mod bundles
+    // keybindery-api too, Fabric resolves the duplicate mod id by picking the
+    // newest version, which is safe.)
     //
-    // §0035 (JiJ the shippable jar) lineage: pre-26.x this had to be the
-    // REMAPPED jar, never `namedElements`. With the remap layer gone the
-    // hazard class is gone too — the bare project dep IS the shippable jar.
+    // Before 26.x the bundled jar had to be the remapped jar, never
+    // `namedElements`. With remapping gone that risk is gone too: the plain
+    // project dep is the shippable jar.
     include project(":keybindery-api")
 
-    // MenuKit — F4 controls-screen toolbar uses MK Dropdown widgets and
-    // VanillaScreenPanelAdapter to host them on the vanilla KeyBindsScreen.
-    // Hard dependency rather than soft because the toolbar is core to F4.
-    // MenuKit 6.0.0 is split (§0062): the project dep is its common half; the
+    // MenuKit: the Controls screen toolbar uses MenuKit Dropdown widgets and
+    // VanillaScreenPanelAdapter to put them on the vanilla KeyBindsScreen. A
+    // hard dependency, because the toolbar is central to the Controls screen.
+    // MenuKit is split since 6.0.0: the project dep is its common half, and the
     // client half (Dropdown, panels, adapters) is added by output below.
     implementation project(':menukit')
 }
@@ -136,7 +128,7 @@ loom {
         }
     }
 
-    // 26.2: KeyBindsList.KeyEntry's ctor went private; KeybinderyKeyEntry
+    // 26.2: KeyBindsList.KeyEntry's constructor went private; KeybinderyKeyEntry
     // subclasses it. See the .accesswidener file for the rationale.
     accessWidenerPath = file("src/main/resources/keybindery.accesswidener")
 
@@ -159,18 +151,17 @@ dependencies {
     // MenuKit's client half, which the project dep above leaves out.
     clientImplementation rootProject.project(':menukit').sourceSets.client.output
 
-    // ModMenu — soft dep. compileOnly means Keybindery compiles against
+    // ModMenu, a soft dependency. compileOnly means Keybindery compiles against
     // ModMenu's API; localRuntime brings it into the dev launch so the in-game
-    // mod list shows Keybindery's config screen entry.
-    // 26.2 status: stable since 20.0.0 (2026-07-08); bumped to 20.0.1 on
-    // 2026-09-04. Keybindery's @Mixin(ModMenu.class) must hold against it.
+    // mod list shows Keybindery's config screen entry. ModMenu has had stable
+    // 26.2 builds since 20.0.0, and this is 20.0.1. Keybindery's
+    // @Mixin(ModMenu.class) must keep working against it.
     clientCompileOnly "com.terraformersmc:modmenu:20.0.1"
     localRuntime "com.terraformersmc:modmenu:20.0.1"
 
-    // YACL — Keybindery's chosen config-screen framework. Bundled into
-    // Keybindery's jar via Loom's `include` (Jar-in-Jar), so players don't
-    // need to install YACL separately. Compile + dev runtime
-    // here; the `include` above JIJs it into the release jar.
+    // YACL, Keybindery's config-screen framework. Compile and dev runtime
+    // here; the `include` above bundles it into the release jar (Jar-in-Jar),
+    // so players don't need to install YACL separately.
     clientImplementation "maven.modrinth:yacl:3.9.6+26.2-fabric"
 }
 
@@ -204,7 +195,7 @@ modrinth {
     }
 }
 
-// ci-cd.md stage 2: the shipped jar must self-report the bumped version. A jar that
+// The shipped jar must report the bumped version itself. A jar that
 // says the wrong version silently breaks every dependency gate against it, so this
 // fails the build instead of relying on someone remembering to unzip and look.
 tasks.register('verifyJarVersion') {
@@ -221,7 +212,7 @@ tasks.register('verifyJarVersion') {
 }
 build.dependsOn verifyJarVersion
 
-// ci-cd.md stage 2: this mod must pin MenuKit to the major it was built against.
+// This mod must pin MenuKit to the major it was built against.
 // The floor guarantees every MenuKit call it makes exists at load time; the ceiling stops a
 // future breaking major from loading against code that never saw it. Both halves matter:
 // a floor alone lets MenuKit 6.0.0 rename an API out from under a shipped jar, and the

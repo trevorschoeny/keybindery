@@ -3,12 +3,12 @@ package com.trevorschoeny.keybindery.screen;
 import net.minecraft.network.chat.Component;
 
 /**
- * Single-select row filter for the F4 toolbar. {@link #NONE} disables
- * filtering; the other values apply at the list level via
+ * Single-choice row filter for the controls-screen toolbar. {@link #NONE}
+ * turns filtering off; the other values are applied to the list through
  * {@code KeybinderyKeyBindsList.setRowFilter}.
  *
- * <p>Replaces the previous {@code conflictsOnly} + {@code freeKeysOnly}
- * boolean pair — Trev's spec (2026-05-19) collapses them to one dropdown.
+ * <p>Replaces the earlier {@code conflictsOnly} and {@code freeKeysOnly}
+ * booleans with one dropdown.
  */
 public enum RowFilter {
     NONE("None"),

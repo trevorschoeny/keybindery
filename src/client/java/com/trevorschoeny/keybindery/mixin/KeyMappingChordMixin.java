@@ -21,30 +21,28 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The core mixin that adds multi-key chord support to ANY vanilla {@link KeyMapping}.
- * Implements the {@link IChordKeyMapping} duck interface so any KeyMapping
- * instance can carry a chord field.
+ * The core mixin that adds multi-key chord support to every vanilla
+ * {@link KeyMapping}. Implements the {@link IChordKeyMapping} duck interface so
+ * any KeyMapping can carry a chord.
  *
- * <p><b>Differences vs. MenuKit's prior {@code MKKeyMappingMixin} (2026-05-18 migration):</b>
+ * <p><b>How it differs from MenuKit's earlier {@code MKKeyMappingMixin}:</b>
  * <ul>
- *   <li><b>No subset-suppression.</b> MK's version suppressed shorter chords when
- *       a longer chord matched ("Shift+K active → don't fire K"). Trev's Q2
- *       directive (all-match-fire) reverses this: every matching subset fires.
- *       So the suppression methods are gone.</li>
- *   <li><b>Dual-mode dispatch.</b> When {@code simultaneousMode} is OFF (default),
- *       {@code setDown(true)} checks GLFW poll (all keys held). When ON, it
- *       checks the {@link ChordPressBuffer} timestamps against the configured
- *       window. Both paths gate the same vanilla setDown call.</li>
- *   <li><b>Re-fire on re-press.</b> Per Trev's #1: chord fires again when the
- *       triggering key is re-pressed. setDown is called on each press, so as
- *       long as we don't track "already-fired-this-buildup" state, re-fires
- *       happen naturally.</li>
+ *   <li><b>No subset suppression.</b> MenuKit's version kept shorter chords
+ *       from firing when a longer chord matched (Shift+K held, so K doesn't
+ *       fire). Here every matching chord fires, so those suppression methods
+ *       are gone.</li>
+ *   <li><b>Two detection modes.</b> With {@code simultaneousMode} off (the
+ *       default), {@code setDown(true)} polls GLFW to check all keys are held.
+ *       With it on, it checks the {@link ChordPressBuffer} times against the
+ *       configured window. Both decide the same vanilla setDown call.</li>
+ *   <li><b>Fires again on a new press.</b> A chord fires again when its
+ *       triggering key is pressed again. setDown runs on each press, and no
+ *       "already fired" state is kept, so this just happens.</li>
  * </ul>
  *
- * <p>Per §0003 (Keybindery canon, accepted 2026-05-18):
- * {@code @Inject(at=@At("HEAD"), cancellable=true)} followed by {@code ci.cancel()}
- * is permitted here. The cancellation preserves other mods' ability to inject
- * earlier and prevent it — the mod-coexistence property §0030 protects.
+ * <p>{@code @Inject(at=@At("HEAD"), cancellable=true)} followed by
+ * {@code ci.cancel()} is allowed here. Unlike an @Overwrite, it still lets
+ * other mods inject earlier and prevent the cancel, so mods can coexist.
  */
 @Mixin(KeyMapping.class)
 public abstract class KeyMappingChordMixin implements IChordKeyMapping {
@@ -61,11 +59,9 @@ public abstract class KeyMappingChordMixin implements IChordKeyMapping {
     @Override
     public void keybindery$setChord(Chord chord) { this.keybindery$chord = chord; }
 
-    // ── setDown gate ─────────────────────────────────────────────────────────
-    //
-    // When a multi-key chord exists, dispatch to the configured mode. If the
-    // chord isn't satisfied, cancel — vanilla won't mark the mapping as down.
-    // §0003 permits HEAD-cancellable inject here.
+    // setDown: when a multi-key chord exists, check it in the configured mode.
+    // If the chord isn't satisfied, cancel, so vanilla won't mark the mapping
+    // as down.
 
     @Inject(method = "setDown(Z)V", at = @At("HEAD"), cancellable = true)
     private void keybindery$onSetDown(boolean isDown, CallbackInfo ci) {
@@ -90,9 +86,7 @@ public abstract class KeyMappingChordMixin implements IChordKeyMapping {
         }
     }
 
-    // ── click guard ──────────────────────────────────────────────────────────
-    //
-    // Vanilla's KeyMapping.click() increments clickCount for every mapping
+    // click: vanilla's KeyMapping.click() increments clickCount for every mapping
     // matching the pressed key. For multi-key chords, that increment can be
     // a false positive when the full chord isn't satisfied. Clear those at
     // TAIL so consumeClick() doesn't see them.
@@ -122,13 +116,11 @@ public abstract class KeyMappingChordMixin implements IChordKeyMapping {
         }
     }
 
-    // ── resetMapping: register chord under all its keys ──────────────────────
-    //
-    // After vanilla rebuilds its KEY → List<KeyMapping> map, register every
-    // multi-key chord under EACH constituent key. That way vanilla's dispatch
-    // reaches the chord regardless of which key in the chord triggered the
-    // event (e.g., pressing 2 last when binding is K+E+2 still hits the
-    // KeyMapping that vanilla would only register under its base key).
+    // resetMapping: after vanilla rebuilds its key-to-List<KeyMapping> map,
+    // register every multi-key chord under each of its keys. That way vanilla's
+    // dispatch reaches the chord whichever of its keys triggered the event
+    // (pressing 2 last for the binding K+E+2 still reaches the KeyMapping that
+    // vanilla would only register under its base key).
 
     @Inject(method = "resetMapping", at = @At("TAIL"))
     private static void keybindery$onResetMappingTail(CallbackInfo ci) {
@@ -149,7 +141,7 @@ public abstract class KeyMappingChordMixin implements IChordKeyMapping {
         }
     }
 
-    // ── Display name: show the full chord ────────────────────────────────────
+    // Display name: show the full chord.
 
     @Inject(method = "getTranslatedKeyMessage", at = @At("HEAD"), cancellable = true)
     private void keybindery$onGetTranslatedKeyMessage(CallbackInfoReturnable<Component> cir) {
@@ -162,7 +154,7 @@ public abstract class KeyMappingChordMixin implements IChordKeyMapping {
         }
     }
 
-    // ── Conflict detection: full chord comparison, not single-key ────────────
+    // Conflict detection: compare the full chord, not a single key.
 
     @Inject(method = "same", at = @At("HEAD"), cancellable = true)
     private void keybindery$onSame(KeyMapping other, CallbackInfoReturnable<Boolean> cir) {
@@ -175,8 +167,8 @@ public abstract class KeyMappingChordMixin implements IChordKeyMapping {
             return;
         }
         // Asymmetric: a multi-key chord doesn't conflict with a single-key
-        // vanilla mapping on the same base key — setDown's chord check
-        // already prevents the false fire.
+        // vanilla mapping on the same base key, because setDown's chord check
+        // already stops the false fire.
         if (thisChord != null && !thisChord.isUnbound() && thisChord.size() > 1) {
             cir.setReturnValue(false);
             return;
@@ -187,19 +179,18 @@ public abstract class KeyMappingChordMixin implements IChordKeyMapping {
         }
     }
 
-    // ── Keep chord in sync when vanilla setKey is called ────────────────────
-    //
-    // E.g., the controls screen's "Reset" button calls setKey(getDefaultKey()).
-    // Without this, the vanilla base key resets but the chord field retains
-    // the old multi-key binding — silent malfunction.
+    // Keep the chord in sync when vanilla's setKey is called. For example, the
+    // controls screen's Reset button calls setKey(getDefaultKey()). Without
+    // this, the base key resets but the chord field keeps the old multi-key
+    // binding, and the keybind silently misbehaves.
 
     @Inject(method = "setKey", at = @At("TAIL"))
     private void keybindery$onSetKey(InputConstants.Key newKey, CallbackInfo ci) {
         if (newKey.equals(InputConstants.UNKNOWN)) {
             this.keybindery$chord = Chord.UNBOUND;
         } else {
-            // Skip auto-sync while a capture session is active for this mapping —
-            // the capture engine sets the chord explicitly after finalizing.
+            // Skip the sync while a capture is active for this mapping; the
+            // capture sets the chord itself when it finishes.
             if (ChordCapture.activeMapping != (Object) this) {
                 this.keybindery$chord = new Chord(java.util.Set.of(newKey));
             }

@@ -8,10 +8,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 /**
- * Mixin accessor exposing vanilla {@code KeyBindsList$KeyEntry}'s private
- * fields so {@code KeybinderyKeyEntry} (subclass in the vanilla package
- * for constructor reachability) can read the change/reset buttons +
- * keymapping + name + hasCollision flag during render.
+ * Exposes vanilla {@code KeyBindsList$KeyEntry}'s private fields so
+ * {@code KeybinderyKeyEntry} (a subclass in the vanilla package, so it can
+ * reach the constructor) can read the change and reset buttons, the key
+ * mapping, the name and the hasCollision flag during render.
  */
 @Mixin(KeyBindsList.KeyEntry.class)
 public interface KeyEntryAccessor {

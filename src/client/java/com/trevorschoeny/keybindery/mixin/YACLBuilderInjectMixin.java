@@ -30,22 +30,20 @@ import java.nio.file.Paths;
 import java.util.List;
 
 /**
- * Injects a "Keybinds" category into any YACL config screen built by a
- * mod with registered {@link KeyMapping}s. The mod identifies itself
- * either via {@link CurrentModContext} (set by
- * {@link ModMenuConfigScreenMixin} when ModMenu opens the screen) or via
- * stack-walking + classpath-match at {@code build()} time (fallback for
- * YACL screens opened outside ModMenu).
+ * Adds a "Keybinds" category to any YACL config screen built by a mod that
+ * has registered {@link KeyMapping}s. The mod is identified either through
+ * {@link CurrentModContext} (set by {@link ModMenuConfigScreenMixin} when
+ * ModMenu opens the screen) or, for YACL screens opened outside ModMenu, by
+ * walking the stack and matching the caller's class path at {@code build()}.
  *
- * <p>YACL's {@code BuilderImpl.categories} is a plain {@code ArrayList}
- * that {@code build()} freezes into an {@code ImmutableList} via
- * {@code ImmutableList.copyOf}. We {@code @Inject} at HEAD and append the
- * Keybinds category before the freeze happens. Precise injection per
- * §0030 — no {@code @Overwrite}.
+ * <p>YACL's {@code BuilderImpl.categories} is a plain {@code ArrayList} that
+ * {@code build()} freezes into an {@code ImmutableList} with
+ * {@code ImmutableList.copyOf}. This injects at HEAD and appends the Keybinds
+ * category before that happens. No {@code @Overwrite}.
  *
- * <p>Soft-dep — YACL is bundled JIJ as a hard runtime dependency, but if
- * a player runs an exotic configuration where YACL is absent, Fabric
- * silently skips this mixin (target class missing).
+ * <p>YACL is bundled (Jar-in-Jar) as a hard runtime dependency, but if some
+ * unusual setup has no YACL, Fabric silently skips this mixin because its
+ * target class is missing.
  */
 @Mixin(targets = "dev.isxander.yacl3.impl.YetAnotherConfigLibImpl$BuilderImpl")
 public abstract class YACLBuilderInjectMixin {
@@ -104,40 +102,37 @@ public abstract class YACLBuilderInjectMixin {
 
     @Unique
     private static ConfigCategory keybindery$buildKeybindsCategory(List<KeyMapping> mappings) {
-        // Capture the mod-id at build-time so the "Open Keybind Menu" button
-        // at the bottom can open the controls screen pre-filtered to this
-        // mod. The same value drove the keymapping list, so it's correct.
+        // The mod id at build time, the same value that chose the key mappings.
+        // (The Keybind Menu button below opens the unfiltered menu, so it
+        // doesn't use this.)
         final String modId = CurrentModContext.get();
 
         ConfigCategory.Builder catBuilder = ConfigCategory.createBuilder()
                 .name(Component.literal("Keybinds"));
         for (KeyMapping km : mappings) {
-            // One row per keymapping: name on the left (YACL renders it
-            // from the Option's name), chord button + Conflicts + Reset
-            // icons clustered on the right (rendered by ChordControllerWidget).
-            // The chord button widget shrank when Conflicts/Reset became
-            // icons, so the whole row now fits comfortably on one line.
+            // One row per key mapping: the name on the left (YACL renders it
+            // from the Option's name), and the chord button with the Conflicts
+            // and Reset icons on the right (rendered by ChordControllerWidget).
+            // Conflicts and Reset are icons, so the whole row fits on one line.
             catBuilder.option(Option.<Chord>createBuilder()
                     .name(Component.translatable(km.getName()))
                     .binding(
                             // YACL's "reset to default" uses this as the
-                            // target. Must be the keymapping's actual default
-                            // (e.g. Jump → Space), not UNBOUND — otherwise
-                            // Reset clears the binding instead of restoring it.
+                            // target. It must be the key mapping's actual default
+                            // (Jump is Space, for example), not UNBOUND, or Reset
+                            // would clear the binding instead of restoring it.
                             IChordKeyMapping.defaultChord(km),
                             () -> IChordKeyMapping.getChord(km),
                             chord -> IChordKeyMapping.updateFromChord(km, chord))
                     .customController(option -> new ChordController(option, km))
                     .build());
         }
-        // Escape-hatch button at the end of the tab — opens the full
-        // controls screen (no filter). Per Trev (2026-05-24), this isn't
-        // mod-scoped: the user is already viewing this mod's keybinds in
-        // the tab, so clicking through to the menu means they want to see
-        // EVERYTHING and search/filter from there.
+        // A button at the end of the tab that opens the full controls screen,
+        // with no filter. It isn't limited to this mod: the player is already
+        // looking at this mod's keybinds in the tab, so going to the menu
+        // means they want to see everything and search or filter from there.
         //
-        // Standard YACL ButtonOption — label on the left, button verb on
-        // the right.
+        // A standard YACL ButtonOption: label on the left, button on the right.
         catBuilder.option(ButtonOption.createBuilder()
                 .name(Component.literal("Keybind Menu"))
                 .text(Component.literal("Open"))

@@ -6,47 +6,41 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Records the most-recent KEY_DOWN timestamp for every key seen by Keybindery
- * during this play session. Used for simultaneous-mode chord detection:
- * a chord fires when all its keys have been initially pressed within a
- * configurable time window.
+ * Records the latest KEY_DOWN time for every key Keybindery sees during this
+ * session. Used by Simultaneous Mode: a chord fires when all its keys were
+ * first pressed within a configurable time window.
  *
- * <p>Per Trev's spec (2026-05-18), simultaneous-mode chord detection is
- * timestamp-based on the initial press event — release state is irrelevant
- * after the press. This buffer holds those timestamps. The mixin that feeds
- * it ({@code KeyboardChordPressMixin}) intercepts vanilla's input dispatch
- * and stamps the key on KEY_DOWN.
+ * <p>Simultaneous Mode goes by the time of the first press only; whether the
+ * key is released afterwards doesn't matter. This buffer holds those times.
+ * The mixin that feeds it ({@code KeyboardChordPressMixin}) intercepts
+ * vanilla's input dispatch and records the key on KEY_DOWN.
  *
- * <p>Keys are L/R-normalized on write so chord lookups via {@link #lastPress}
- * see a consistent key identity regardless of which physical modifier was
- * pressed. Entries don't expire — the configured time window does the gating.
- * Memory cost is bounded by the number of distinct keys a player has ever
- * pressed in this session (small, single-digit-KB at most).
+ * <p>Left and right modifiers are stored as the left one, so lookups via
+ * {@link #lastPress} see the same key whichever physical modifier was pressed.
+ * Entries don't expire; the configured time window does the filtering. Memory
+ * is bounded by the number of distinct keys pressed this session (a few KB at
+ * most).
  *
- * <p>Singleton. Read-only outside this package's mixin layer.
+ * <p>Singleton. Only this package's mixins write to it.
  */
 public final class ChordPressBuffer {
 
     private static final ChordPressBuffer INSTANCE = new ChordPressBuffer();
 
-    /** Singleton accessor. */
     public static ChordPressBuffer get() { return INSTANCE; }
 
     private final Map<InputConstants.Key, Long> pressTimestamps = new HashMap<>();
 
     private ChordPressBuffer() {}
 
-    /**
-     * Records a KEY_DOWN event for the given key at the given time. L/R
-     * modifier variants are normalized to LEFT before storage.
-     */
+    /** Records a KEY_DOWN for the key at the given time. Right modifiers are stored as left. */
     public void recordPress(InputConstants.Key key, long timestampMs) {
         pressTimestamps.put(normalize(key), timestampMs);
     }
 
     /**
-     * Returns the timestamp of the most-recent KEY_DOWN for the given key,
-     * or null if the key has never been pressed in this session.
+     * The time of the latest KEY_DOWN for the given key, or null if the key
+     * hasn't been pressed this session.
      */
     public Long lastPress(InputConstants.Key key) {
         return pressTimestamps.get(normalize(key));

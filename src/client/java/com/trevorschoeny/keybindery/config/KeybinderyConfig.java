@@ -11,25 +11,25 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * Keybindery's own mod settings. Backed by {@code config/keybindery.json}.
- * Surfaced via YACL ({@link KeybinderyConfigScreen}) and ModMenu
+ * Keybindery's own mod settings, saved in {@code config/keybindery.json} and
+ * shown through YACL ({@link KeybinderyConfigScreen}) and ModMenu
  * ({@link KeybinderyConfigModMenu}).
  *
- * <p>Per Trev's spec (2026-05-18), Section 1's two configs are:
+ * <p>The chord settings:
  * <ul>
- *   <li>{@code simultaneousMode} — toggle, default OFF (= default chord mode:
- *       all keys must be held simultaneously).</li>
- *   <li>{@code simultaneousWindowMs} — int, default 100ms, visible only when
- *       {@code simultaneousMode} is ON. Time window for initial-press events
- *       to count as "simultaneous."</li>
+ *   <li>{@code simultaneousMode}: toggle, default off (the default chord mode,
+ *       where all keys must be held down together).</li>
+ *   <li>{@code simultaneousWindowMs}: int, default 100ms, shown only when
+ *       {@code simultaneousMode} is on. How close together the first presses
+ *       must be to count as "simultaneous".</li>
  * </ul>
  *
- * <p>Per-keybind chord assignments are persisted separately, in vanilla's
- * {@code options.txt} via mixin (see {@code GameOptionsChordPersistenceMixin}).
- * Per Trev's Q5 directive: invade {@code options.txt}, not a sidecar.
+ * <p>Per-keybind chords are saved separately, in vanilla's {@code options.txt}
+ * via a mixin (see {@code OptionsChordPersistenceMixin}), rather than in a file
+ * of their own.
  *
- * <p>Plain-old fields, not a record, because YACL bindings are field-based
- * and we want runtime mutation when the player toggles via the keybind.
+ * <p>Plain fields, not a record, because YACL binds to fields and the toggle
+ * keybind changes them at runtime.
  */
 public final class KeybinderyConfig {
 
@@ -42,23 +42,20 @@ public final class KeybinderyConfig {
 
     public static KeybinderyConfig get() { return INSTANCE; }
 
-    // ── Fields ──────────────────────────────────────────────────────────────
-    // Public + non-final so YACL can bind/mutate directly. Toggle keybind
-    // also flips simultaneousMode at runtime.
+    // Public and non-final so YACL can bind and change them directly. The
+    // toggle keybind also flips simultaneousMode at runtime.
 
     public boolean simultaneousMode = false;
     public int simultaneousWindowMs = 100;
 
     /**
-     * Kill-switch for the F4 controls-screen overhaul. Default {@code false}
-     * (Keybindery replaces vanilla's {@link net.minecraft.client.gui.screens.options.controls.KeyBindsScreen}
-     * with its search/sort/filter-capable version). Set to {@code true} for
-     * users running Controlling alongside Keybindery who prefer Controlling's
-     * UX, or for players who just want vanilla's controls screen back.
+     * Turns off Keybindery's controls screen. Default {@code false} (Keybindery
+     * replaces vanilla's {@link net.minecraft.client.gui.screens.options.controls.KeyBindsScreen}
+     * with its version that can search, sort and filter). Set to {@code true}
+     * for players running Controlling alongside Keybindery who prefer
+     * Controlling's screen, or who just want vanilla's controls screen back.
      */
     public boolean disableControlsScreenReplacement = false;
-
-    // ── Persistence ─────────────────────────────────────────────────────────
 
     public static void load() {
         if (!Files.exists(CONFIG_PATH)) {

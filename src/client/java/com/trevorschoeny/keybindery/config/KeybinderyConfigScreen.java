@@ -12,21 +12,21 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 /**
- * YACL-backed config screen for Keybindery's two Section 1 settings:
+ * YACL config screen for Keybindery's settings. The chord settings:
  *
  * <ul>
- *   <li><b>Simultaneous Mode</b> (boolean, default OFF). When OFF, chord
- *       detection requires all keys held concurrently (default mode). When ON,
- *       chord detection requires all keys' initial presses within the
- *       configured time window.</li>
- *   <li><b>Simultaneous Window (ms)</b> (int 50–500, default 100). Visible
- *       only when Simultaneous Mode is ON. Larger = more forgiving on the
- *       inter-key timing; smaller = stricter.</li>
+ *   <li><b>Simultaneous Mode</b> (boolean, default off). When off, a chord
+ *       fires only while all its keys are held at once (the default). When
+ *       on, all keys' first presses must land within the configured time
+ *       window.</li>
+ *   <li><b>Simultaneous Window (ms)</b> (int 50 to 500, default 100). Shown
+ *       only when Simultaneous Mode is on. Larger is more forgiving about the
+ *       timing between keys; smaller is stricter.</li>
  * </ul>
  *
- * <p>Settings persist to {@code config/keybindery.json} on save.
- * Per Trev's spec (2026-05-18), default mode = OFF — players opt INTO
- * simultaneous mode if they prefer that detection model.
+ * <p>Settings are saved to {@code config/keybindery.json}. Simultaneous Mode
+ * is off by default; players turn it on if they prefer that way of detecting
+ * chords.
  */
 public final class KeybinderyConfigScreen {
 
@@ -67,14 +67,13 @@ public final class KeybinderyConfigScreen {
                 .available(cfg.simultaneousMode)
                 .build();
 
-        // Hide the window slider when simultaneous mode is OFF. YACL's listener
-        // pattern: when Simultaneous Mode flips, refresh the window option's
-        // availability so the slider greys out / lights up accordingly.
+        // Grey out the window slider while Simultaneous Mode is off: when the
+        // mode flips, a YACL listener updates the window option's availability.
         simultaneousOpt.addListener((opt, newValue) -> windowOpt.setAvailable(newValue));
 
-        // F1 demo entry — uses the F1 API to render a chord-bindable row.
-        // Lives in its own category so it's clearly a developer-facing demo,
-        // separated from end-user Chord Detection settings.
+        // Demo entry: uses the in-config keybind API to render a chord row. It
+        // has its own category so it reads as a developer demo, apart from the
+        // player-facing Chord Detection settings.
         java.util.Collection<? extends Option<?>> f1DemoChord = KeybinderyAPI.getInstance().createYACLChordOption(
                 KeybinderyClient.F1_DEMO_CHORD,
                 Component.literal("F1 Demo Chord"),

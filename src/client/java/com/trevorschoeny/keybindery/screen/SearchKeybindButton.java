@@ -15,21 +15,20 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * F4 toolbar "Search Keybind" — chord-capture button. Click to enter
- * capture mode; press a chord; release to finalize. Right-click clears.
+ * The toolbar's "Search Keybind" chord-capture button. Click to start
+ * capturing, press a chord, release to finish. Right-click clears.
  *
- * <p>Reuses {@link ChordCapture} + {@code KeyBindsScreenCaptureMixin}'s
- * key-routing path: when the button starts capture it sets
- * {@code ChordCapture.activeCapture}; the mixin's HEAD-injects on
- * {@code KeyBindsScreen.keyPressed/mouseClicked} forward all subsequent
- * events to the active capture engine.
+ * <p>Uses {@link ChordCapture} and {@code KeyBindsScreenCaptureMixin}'s key
+ * routing: starting a capture sets {@code ChordCapture.activeCapture}, and the
+ * mixin's HEAD injections on {@code KeyBindsScreen.keyPressed} and
+ * {@code mouseClicked} forward every later event to that capture.
  */
 public class SearchKeybindButton extends AbstractPanelElement {
 
     private final Supplier<Chord> chordGetter;
     private final Consumer<Chord> chordSetter;
     private final Component placeholder;
-    /** Shown on hover (not while capturing); MK 6 elements take it at construction. */
+    /** Shown on hover (not while capturing); MenuKit 6 elements take it at construction. */
     private final Component tooltip;
 
     private ChordCapture capture;
@@ -39,7 +38,7 @@ public class SearchKeybindButton extends AbstractPanelElement {
                                 Consumer<Chord> chordSetter,
                                 Component placeholder,
                                 Component tooltip) {
-        // MK 6 no-builder subclass: set the base's geometry directly.
+        // A MenuKit 6 subclass without a builder: set the base's geometry directly.
         this.childX = childX;
         this.childY = childY;
         this.width = this.authoredWidth = width;
@@ -52,11 +51,12 @@ public class SearchKeybindButton extends AbstractPanelElement {
 
     private boolean isCapturing() { return capture != null && capture.isCapturing(); }
 
-    /** Vanilla button sprite atlas — matches the Sort/Filter dropdowns,
-     *  which draw vanilla here regardless of style since Controls is an
-     *  options screen. Capturing uses {@code widget/button_disabled}
-     *  (vanilla's darker uniform gray) to visually distinguish
-     *  active-but-not-clickable. */
+    /**
+     * Vanilla button sprites, to match the Sort and Filter dropdowns, which
+     * always draw vanilla here because Controls is an options screen.
+     * Capturing uses {@code widget/button_disabled} (vanilla's darker flat
+     * gray) to show the button is busy and can't be clicked.
+     */
     private static final Identifier SPRITE_NORMAL =
             Identifier.withDefaultNamespace("widget/button");
     private static final Identifier SPRITE_HIGHLIGHTED =
@@ -84,9 +84,9 @@ public class SearchKeybindButton extends AbstractPanelElement {
         int textY = sy + (height - font.lineHeight) / 2;
         ctx.graphics().text(font, label, textX, textY, 0xFFFFFFFF, true);
 
-        // Hover-triggered tooltip — surfaces the right-click-to-clear hint
-        // (otherwise non-discoverable). Skip while capturing — the preview
-        // text is the user's feedback signal there.
+        // The hover tooltip shows the right-click-to-clear hint, which players
+        // would otherwise never find. Skipped while capturing, when the preview
+        // text is the feedback.
         if (hovered && !isCapturing()) queueTooltip(ctx);
     }
 
@@ -130,11 +130,10 @@ public class SearchKeybindButton extends AbstractPanelElement {
     }
 
     private void startCapture() {
-        // ESC and Delete/Backspace during a search-keybind capture both
-        // CLEAR the chord — the user pressed the abort key, the natural
-        // intent for a search field is "drop this filter," not "keep the
-        // last value." Different from row-bind semantics (row-bind onCancel
-        // preserves the previous binding so a misclick doesn't wipe it).
+        // Escape, Delete and Backspace during a search capture all clear the
+        // chord: in a search field, aborting means dropping the filter, not
+        // keeping the last value. Binding a row is different; there onCancel
+        // keeps the previous binding so a misclick doesn't wipe it.
         Runnable clearAndStop = () -> {
             chordSetter.accept(Chord.UNBOUND);
             stopCapture();
@@ -146,8 +145,8 @@ public class SearchKeybindButton extends AbstractPanelElement {
                 clearAndStop
         );
         capture.start();
-        // No activeMapping — that's the row-bind flow's live-preview signal;
-        // toolbar search capture doesn't preview into a KeyMapping.
+        // No activeMapping: that drives the live preview when binding a row, and
+        // the toolbar search doesn't preview into a KeyMapping.
         ChordCapture.activeCapture = capture;
     }
 

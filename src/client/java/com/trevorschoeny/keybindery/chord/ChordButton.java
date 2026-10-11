@@ -41,7 +41,7 @@ import java.util.Objects;
  * {@code tooltip}, ...) plus {@link Builder#label}.
  *
  * <p>Layout, one row, 16px tall: {@code [label] [ chord ][⚠][↻]}. All three
- * buttons are plain MenuKit {@link Button}s, styled MK's way everywhere
+ * buttons are plain MenuKit {@link Button}s, in MenuKit's style everywhere
  * except an options screen, which always draws them vanilla. They live in
  * one element so a wrapping {@code Flow} can never split them across lines.
  *
@@ -112,7 +112,7 @@ public class ChordButton extends AbstractPanelElement {
                 : List.of(label, face, conflicts, reset);
     }
 
-    // ── Geometry: children are positioned relative to this element's origin ──
+    // Geometry. Children are positioned relative to this element's origin.
 
     private int labelW() {
         return label == null ? 0 : label.getWidth() + LABEL_GAP;
@@ -151,7 +151,7 @@ public class ChordButton extends AbstractPanelElement {
         if (capture != null) capture.pollReleases(Minecraft.getInstance().getWindow().handle());
     }
 
-    // ── Input: ChildDispatch hit-tests each child and skips all when disabled ──
+    // Input. ChildDispatch hit-tests each child and skips them all when disabled.
 
     @Override
     public boolean mouseClicked(InputContext in, int button) {
@@ -184,15 +184,17 @@ public class ChordButton extends AbstractPanelElement {
         ChildDispatch.attach(children, screen);
     }
 
-    /** Screen closing or rebuilding mid-capture: drop it so the static
-     *  {@code activeCapture} can't hijack the next screen's keys. */
+    /**
+     * The screen is closing or rebuilding mid-capture: drop the capture so the
+     * static {@code activeCapture} can't take the next screen's keys.
+     */
     @Override
     public void onDetach(Screen screen) {
         ChildDispatch.detach(children, screen);
         stopCapture();
     }
 
-    // ── Capture lifecycle (mirrors ChordControllerWidget) ────────────────
+    // Capture lifecycle, the same as ChordControllerWidget's.
 
     private void startCapture() {
         capture = new ChordCapture(
@@ -229,7 +231,7 @@ public class ChordButton extends AbstractPanelElement {
         return shown;
     }
 
-    /** The key face: a stock MK Button whose content is the live chord text. */
+    /** The key face: a stock MenuKit Button whose content is the live chord text. */
     private final class Face extends Button {
         Face() {
             super(Button.builder().size(FACE_W, H));
@@ -255,7 +257,7 @@ public class ChordButton extends AbstractPanelElement {
                 return true;
             }
             if (button != 0) return false;
-            super.mouseClicked(in, button); // press affordance + click sound
+            super.mouseClicked(in, button); // pressed look and click sound
             startCapture();
             return true;
         }

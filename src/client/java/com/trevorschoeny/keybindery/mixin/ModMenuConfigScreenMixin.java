@@ -11,19 +11,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * Hooks ModMenu's {@code getConfigScreen(modId, parent)} return to record
- * the {@code (modId, screen)} pair into {@link ModConfigKeybindsRegistry}.
- * This is the cleanest cross-mod hook for identifying "which mod owns this
- * config screen" — ModMenu has the mod ID directly; no stack-walking needed.
+ * Hooks the return of ModMenu's {@code getConfigScreen(modId, parent)} to
+ * record the {@code (modId, screen)} pair in {@link ModConfigKeybindsRegistry}.
+ * This is the simplest way to tell which mod owns a config screen: ModMenu has
+ * the mod ID directly, so no stack walking is needed.
  *
- * <p>Soft-dep — ModMenu is {@code modCompileOnly}. If a player runs without
- * ModMenu, this mixin's target class is missing and the mixin is silently
- * skipped (Fabric mixin's standard behavior for absent classes). The
- * registry stays empty in that case; the overlay-button + YACL stack-walk
- * fallback still surface keybinds via their own discovery paths.
+ * <p>ModMenu is a soft dependency ({@code modCompileOnly}). Without ModMenu,
+ * this mixin's target class is missing and the mixin is silently skipped
+ * (Fabric's usual behavior for absent classes). The registry then stays
+ * empty, and the overlay button and YACL stack-walk fallback still find
+ * keybinds their own way.
  *
- * <p>Precise injection per §0030: single {@code @Inject(at=RETURN)} reading
- * the screen argument; vanilla flow unchanged.
+ * <p>Narrow injections only: HEAD sets the current mod and RETURN reads the
+ * returned screen; ModMenu's own flow is unchanged.
  */
 @Mixin(ModMenu.class)
 public abstract class ModMenuConfigScreenMixin {

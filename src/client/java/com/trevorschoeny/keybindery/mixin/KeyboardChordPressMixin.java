@@ -12,20 +12,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.mojang.blaze3d.platform.InputConstants.Type;
 
 /**
- * Stamps {@link ChordPressBuffer} with the current time whenever a keyboard
- * key is initially pressed (KEY_DOWN). Used for simultaneous-mode chord
- * detection: a chord fires when all its keys' initial press timestamps fall
- * within the configured window.
+ * Records the current time in {@link ChordPressBuffer} whenever a keyboard key
+ * is first pressed (KEY_DOWN). Used by Simultaneous Mode: a chord fires when
+ * the first presses of all its keys fall within the configured window.
  *
- * <p>Captures EVERY key press, including keys not bound to any KeyMapping —
- * because chord membership doesn't require any single chord key to be bound
- * elsewhere. (E.g., the chord {@code K+E+2}: the player might not have K
- * bound to anything alone, but pressing K still contributes to the chord.)
+ * <p>Records every key press, including keys not bound to any KeyMapping,
+ * because a chord key doesn't have to be bound on its own. (For the chord
+ * {@code K+E+2}, the player might not have K bound to anything alone, but
+ * pressing K still counts toward the chord.)
  *
- * <p>Mouse-button presses are NOT captured by this mixin. Mouse-button chord
- * components work in default mode (via GLFW poll), but not in simultaneous
- * mode. If a player wants simultaneous mode with a mouse-inclusive chord,
- * that's a follow-up. Scope kept tight per Trev's Section 1 spec.
+ * <p>Mouse-button presses are not recorded here. Mouse buttons in a chord
+ * work in the default mode (through a GLFW poll) but not in Simultaneous
+ * Mode. Supporting Simultaneous Mode with mouse buttons is left for later.
  */
 @Mixin(KeyboardHandler.class)
 public abstract class KeyboardChordPressMixin {

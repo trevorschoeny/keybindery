@@ -7,9 +7,9 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 /**
  * Accessor for vanilla {@link KeyBindsScreen}'s private {@code keyBindsList}
- * field — needed by {@link com.trevorschoeny.keybindery.screen.KeybinderyKeyBindsScreen}
- * to swap vanilla's list for our filter/sort-capable subclass after the
- * vanilla constructor runs.
+ * field. {@link com.trevorschoeny.keybindery.screen.KeybinderyKeyBindsScreen}
+ * uses it to swap vanilla's list for Keybindery's subclass, which can filter
+ * and sort, after the vanilla constructor runs.
  */
 @Mixin(KeyBindsScreen.class)
 public interface KeyBindsScreenAccessor {

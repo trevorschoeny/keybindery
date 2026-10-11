@@ -16,59 +16,62 @@ import net.minecraft.client.gui.screens.options.controls.KeybinderyKeyBindsList;
 import java.util.List;
 
 /**
- * F4 toolbar MK panel. Two rows:
+ * The controls-screen toolbar, a MenuKit panel with two rows:
  *
  * <ul>
- *   <li><b>Row 1:</b> name-search box + Search Keybind chord-capture button</li>
- *   <li><b>Row 2:</b> "Sort:" label + sort dropdown + "Filter:" label + filter dropdown</li>
+ *   <li><b>Row 1:</b> the name search box and the Search Keybind chord button</li>
+ *   <li><b>Row 2:</b> the "Sort:" label and dropdown, the "Filter:" label and
+ *       dropdown, and Collapse All or Expand All</li>
  * </ul>
  *
- * <p>Built + registered once at client init; targets
- * {@link KeybinderyKeyBindsScreen} via the vanilla-screen panel adapter.
- * All widget state reads/writes through
+ * <p>Built and registered once at client init, on
+ * {@link KeybinderyKeyBindsScreen} through the vanilla-screen panel adapter.
+ * Every widget reads and writes its state through
  * {@link KeybinderyKeyBindsScreen#currentList()}.
  */
 public final class ControlsToolbarPanel {
 
     private ControlsToolbarPanel() {}
 
-    // ── Layout constants ─────────────────────────────────────────────────
+    // Layout.
 
-    /** Y of row 1 inside the panel. Sits close to the panel top — the
-     *  vanilla title that this used to clear at y≈16 is now suppressed
-     *  by {@code KeybinderyKeyBindsScreen.addTitle}, so we can pull up. */
+    /**
+     * Y of row 1 inside the panel. Close to the panel top: the vanilla title
+     * this used to clear at about y=16 is hidden by
+     * {@code KeybinderyKeyBindsScreen.addTitle}, so the row can sit higher.
+     */
     private static final int ROW1_Y = 4;
-    /** Y of row 2 inside the panel. Row 1 + element height + gap. */
+    /** Y of row 2 inside the panel: row 1, plus element height, plus a gap. */
     private static final int ROW2_Y = ROW1_Y + 20 + 4;
-    /** Element height — search box, chord button, dropdowns share. */
+    /** Shared height of the search box, chord button and dropdowns. */
     private static final int ELEM_H = 20;
 
-    // Row 1 element widths + x positions
+    // Row 1 widths and x positions.
     private static final int SEARCH_W = 140;
     private static final int CHORD_BTN_W = 110;
     private static final int SEARCH_X = 0;
     private static final int CHORD_BTN_X = SEARCH_X + SEARCH_W + 4;
 
-    // Row 2 element widths + x positions
+    // Row 2 widths and x positions.
     private static final int SORT_W = 90;
     private static final int FILTER_W = 90;
     private static final int SORT_LABEL_X = 0;
     private static final int SORT_X = 28;          // after "Sort:" label
     private static final int FILTER_LABEL_X = SORT_X + SORT_W + 12;
     private static final int FILTER_X = FILTER_LABEL_X + 34; // after "Filter:" label
-    /** Collapse All / Expand All — two buttons sharing one slot after the
-     *  filter dropdown; visibleWhen swaps between them. */
+    /**
+     * Collapse All and Expand All: two buttons sharing one spot after the
+     * filter dropdown, with visibleWhen choosing which shows.
+     */
     private static final int COLLAPSE_W = 80;
     private static final int COLLAPSE_X = FILTER_X + FILTER_W + 8;
 
-    /** Total outer width — row 2 is the wider row now that the collapse
-     *  button sits after the filter dropdown. */
+    /** Total outer width. Row 2 is the wider row, with the collapse button after the filter dropdown. */
     static final int PANEL_WIDTH = COLLAPSE_X + COLLAPSE_W;
 
-    /** Constructs the panel + adapter and registers it with MK. Call once
-     *  at client init. */
+    /** Builds the panel and adapter and registers them with MenuKit. Call once at client init. */
     public static void install() {
-        // ── Row 1 ──────────────────────────────────────────────────────
+        // Row 1.
         SearchBox searchBox = new SearchBox(
                 SEARCH_X, ROW1_Y, SEARCH_W, ELEM_H,
                 Component.literal("Search keybinds..."),
@@ -76,10 +79,9 @@ public final class ControlsToolbarPanel {
                     KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();
                     if (l != null) l.setSearchQuery(query);
                 },
-                // Lens — populate the visible field from the list's current
-                // searchQuery on every screen attach. Lets openWithModFilterFor
-                // pre-fill the box so the user can backspace it to see all
-                // keybinds.
+                // Fill the field from the list's current searchQuery on every
+                // screen attach. This lets openWithModFilterFor pre-fill the box,
+                // and the player can backspace it to see all keybinds.
                 () -> {
                     KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();
                     return l != null ? l.getSearchQuery() : "";
@@ -92,10 +94,9 @@ public final class ControlsToolbarPanel {
                 Component.literal("Search Keybind..."),
                 Component.literal("Click to bind a chord; right-click to clear."));
 
-        // ── Row 2 ──────────────────────────────────────────────────────
-        // Labels render at ROW2_Y; the row-height of 20 leaves the label
-        // text vertically centered against the dropdown triggers.
-        int labelTextY = ROW2_Y + (ELEM_H - 9) / 2; // 9 = font.lineHeight approx
+        // Row 2. The labels are vertically centered against the dropdowns in
+        // the 20px row.
+        int labelTextY = ROW2_Y + (ELEM_H - 9) / 2; // 9 is about font.lineHeight
         TextLabel sortLabel = TextLabel.builder()
                 .at(SORT_LABEL_X, labelTextY)
                 .text(Component.literal("Sort:"))
@@ -126,10 +127,10 @@ public final class ControlsToolbarPanel {
                        ControlsToolbarPanel::setRowFilter)
                 .build();
 
-        // Collapse All / Expand All — MK Button's label is fixed at
-        // construction, so the state flip is two buttons sharing one slot
-        // with complementary visibleWhen conditions. Both hide under flat
-        // sorts (no category headers to fold) and when no list is open.
+        // Collapse All and Expand All. A MenuKit Button's label is fixed when
+        // it is built, so the switch is two buttons in one spot with opposite
+        // visibleWhen conditions. Both hide under the flat sorts (no category
+        // headers to fold) and when no list is open.
         Button collapseAllBtn = Button.builder()
                 .at(COLLAPSE_X, ROW2_Y).size(COLLAPSE_W, ELEM_H)
                 .label(Component.literal("Collapse All"))
@@ -158,9 +159,9 @@ public final class ControlsToolbarPanel {
                 })
                 .build();
 
-        // Popovers paint in a second renderOverlay pass, so declaration order
-        // is free. Order here is reader-friendly: row 1 first, row 2
-        // left-to-right. MK 6.0.0 (§0065): placement lives on the panel.
+        // Popovers paint in a second renderOverlay pass, so the order here
+        // doesn't matter; it is row 1 first, then row 2 left to right. Since
+        // MenuKit 6.0.0, placement is set on the panel.
         Panel toolbar = Panel.builder("keybindery-controls-toolbar")
                 .elements(List.<PanelElement>of(searchBox, chordBtn,
                                                 sortLabel, filterLabel,
@@ -174,7 +175,7 @@ public final class ControlsToolbarPanel {
                 .on(KeybinderyKeyBindsScreen.class);
     }
 
-    // ── Lens helpers (read/write the active list's filter state) ────────
+    // Read and write the active list's filter state.
 
     private static Chord getSearchChord() {
         KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();

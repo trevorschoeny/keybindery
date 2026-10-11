@@ -12,16 +12,14 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 /**
- * Top-right MenuKit-styled "Keybinds" button injected onto every
- * ModMenu-launched config screen that ISN'T a {@link YACLScreen}. For
- * YACL screens, {@link com.trevorschoeny.keybindery.mixin.YACLBuilderInjectMixin}
- * adds a native Keybinds tab instead — these two paths are mutually
- * exclusive at the visibility level.
+ * A top-right MenuKit "Keybinds" button added to every config screen opened
+ * from ModMenu that is not a {@link YACLScreen}. YACL screens get a native
+ * Keybinds tab from {@link com.trevorschoeny.keybindery.mixin.YACLBuilderInjectMixin}
+ * instead, so a screen never shows both.
  *
- * <p>Single adapter registered at client init with {@code .onAny()}; the
- * panel's {@code visibleWhen} supplier gates per-screen visibility based on
- * the current active screen (read from {@code Minecraft.getInstance().gui.screen()}).
- * Hides when:
+ * <p>One adapter is registered at client init with {@code .onAny()}; the
+ * panel's {@code visibleWhen} supplier decides per screen, based on the
+ * current screen ({@code Minecraft.getInstance().gui.screen()}). Hidden when:
  * <ul>
  *   <li>No active screen.</li>
  *   <li>Active screen is a {@code YACLScreen} (YACL tab covers it).</li>
@@ -33,8 +31,7 @@ public final class ModKeybindsOverlayPanel {
 
     private ModKeybindsOverlayPanel() {}
 
-    /** Constructs the panel + adapter and registers with MK. Call once
-     *  at client init. */
+    /** Builds the panel and adapter and registers them with MenuKit. Call once at client init. */
     public static void install() {
         Button keybindsBtn = Button.builder()
                 .size(80, 20)
@@ -48,7 +45,7 @@ public final class ModKeybindsOverlayPanel {
                 })
                 .build();
 
-        // MK 6.0.0 (§0065): placement lives on the panel; the adapter only
+        // Since MenuKit 6.0.0, placement is set on the panel; the adapter only
         // says which screens and how much padding.
         Panel panel = Panel.builder("keybindery-mod-config-overlay")
                 .add(keybindsBtn)
@@ -60,7 +57,7 @@ public final class ModKeybindsOverlayPanel {
         new VanillaScreenPanelAdapter(panel, /*padding=*/ 0).onAny();
     }
 
-    /** Supplier read every frame by the panel to decide visibility. */
+    /** Read every frame by the panel to decide visibility. */
     private static boolean shouldShow() {
         Screen current = Minecraft.getInstance().gui.screen();
         if (current == null) return false;

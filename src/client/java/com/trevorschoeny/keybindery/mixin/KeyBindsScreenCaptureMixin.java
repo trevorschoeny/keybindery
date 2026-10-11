@@ -25,13 +25,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * Replaces vanilla's single-key capture in {@link KeyBindsScreen} with the
- * multi-key High Water Mark capture from {@link ChordCapture}. Same surface
- * that MK's {@code MKKeyBindsScreenMixin} provided, migrated for Keybindery
- * (2026-05-18).
+ * multi-key high-water-mark capture from {@link ChordCapture}. MenuKit's
+ * {@code MKKeyBindsScreenMixin} did the same before it moved to Keybindery.
  *
- * <p>{@link KeyBindsScreen} extension surface stays untouched; this is a
- * client-side mixin only. The replacement-via-{@code @ModifyVariable} mixin
- * for the screen itself (F4 controls-screen overhaul) lands in Section 3.
+ * <p>This is a client-side mixin only. Swapping the whole screen for
+ * Keybindery's is done separately, by {@link MinecraftSetScreenMixin}.
  *
  * <p>Concrete {@code keyReleased} and {@code mouseReleased} methods are
  * declared here. {@link KeyBindsScreen} doesn't declare them, so the JVM
@@ -78,8 +76,8 @@ public abstract class KeyBindsScreenCaptureMixin extends Screen {
     @Inject(method = "keyPressed(Lnet/minecraft/client/input/KeyEvent;)Z",
             at = @At("HEAD"), cancellable = true)
     private void keybindery$onKeyPressed(KeyEvent keyEvent, CallbackInfoReturnable<Boolean> cir) {
-        // Row-bind flow: when vanilla has a row selected, lazily create the
-        // row-bind capture so the first key press starts capture.
+        // Binding a row: when vanilla has a row selected, create the row's
+        // capture on demand so the first key press starts it.
         if (this.selectedKey != null
                 && (keybindery$capture == null || !keybindery$capture.isCapturing())) {
             keybindery$capture = keybindery$createCapture();
@@ -87,8 +85,8 @@ public abstract class KeyBindsScreenCaptureMixin extends Screen {
             ChordCapture.activeMapping = this.selectedKey;
             ChordCapture.activeCapture = keybindery$capture;
         }
-        // Route to whatever capture is active — row-bind OR a toolbar widget
-        // (e.g. F4 Search Keybind button) that started its own capture.
+        // Send the key to whichever capture is active: the row's, or a toolbar
+        // widget's (such as the Search Keybind button) that started its own.
         ChordCapture active = ChordCapture.activeCapture;
         if (active == null || !active.isCapturing()) return;
         InputConstants.Key key = InputConstants.getKey(keyEvent);
@@ -141,7 +139,7 @@ public abstract class KeyBindsScreenCaptureMixin extends Screen {
         return false;
     }
 
-    @Inject(method = "extractRenderState", at = @At("RETURN"))   // 26.2 extract/draw rename
+    @Inject(method = "extractRenderState", at = @At("RETURN"))   // renamed from render in 26.2
     private void keybindery$pollReleases(GuiGraphicsExtractor graphics, int mouseX, int mouseY,
                                           float partialTick, CallbackInfo ci) {
         ChordCapture active = ChordCapture.activeCapture;

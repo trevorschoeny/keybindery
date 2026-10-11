@@ -10,12 +10,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Accessor mixin for {@link KeyMapping}'s private fields. Needed by the chord
- * system for the same reasons MenuKit needed them (clickCount cleanup, key
- * read/write, MAP rebuild on chord registration).
+ * Accessor mixin for {@link KeyMapping}'s private fields. The chord code needs
+ * them for the same reasons MenuKit did (clickCount cleanup, reading and
+ * writing the key, rebuilding MAP when a chord is registered).
  *
- * <p>Migrated from MenuKit's {@code KeyMappingAccessor} (2026-05-18) with
- * the {@code menuKit$} prefix renamed to {@code keybindery$}.
+ * <p>Moved here from MenuKit's {@code KeyMappingAccessor}, with the
+ * {@code menuKit$} prefix renamed to {@code keybindery$}.
  */
 @Mixin(KeyMapping.class)
 public interface KeyMappingAccessor {

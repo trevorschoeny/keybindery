@@ -7,20 +7,19 @@ import java.util.Set;
 import java.util.WeakHashMap;
 
 /**
- * Tracks which {@link KeyMapping} instances have been "claimed" by a
- * consumer mod's own config UI (via the F1 API). Keybindery's auto-append
- * fallback (F2) skips claimed mappings — they're already surfaced in the
- * consumer's screen, so re-showing them in vanilla controls / ModMenu /
- * Cloth / YACL would be redundant.
+ * Tracks which {@link KeyMapping}s a consumer mod's own config UI has
+ * "claimed" (through the in-config keybind API). Keybindery's auto-append
+ * fallback skips claimed mappings: they already show in the consumer's
+ * screen, so showing them again in vanilla controls, ModMenu, Cloth or YACL
+ * would be redundant.
  *
- * <p>The vanilla controls-screen replacement (F4) still includes claimed
- * mappings — vanilla controls is the universal surface where every
- * keybind belongs, regardless of consumer UX. Only the AUTO-APPEND
- * fallback paths (F2) consult this registry.
+ * <p>Keybindery's controls screen still includes claimed mappings, since the
+ * controls screen is where every keybind belongs, whatever a consumer's own
+ * UI does. Only the auto-append fallback checks this registry.
  *
- * <p>Uses {@link WeakHashMap}-backed set so registry entries don't pin
- * KeyMapping instances if the consumer mod is reloaded mid-session. In
- * practice that's rare, but the GC-friendliness costs nothing.
+ * <p>The set is backed by a {@link WeakHashMap} so it doesn't keep KeyMapping
+ * instances alive if the consumer mod is reloaded mid-session. That is rare,
+ * but it costs nothing.
  */
 public final class ClaimRegistry {
 

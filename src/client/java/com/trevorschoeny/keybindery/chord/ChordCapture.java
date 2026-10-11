@@ -12,36 +12,39 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 /**
- * Shared, callback-driven capture engine for multi-key chord recording.
- * Consumer-built capture UIs and Keybindery's controls-screen capture mixin
- * delegate to an instance of this class during binding sessions.
+ * Shared, callback-driven capture for recording multi-key chords. Consumer
+ * capture UIs and Keybindery's controls-screen capture mixin both hand off to
+ * an instance of this class while a binding is being recorded.
  *
- * <h3>High Water Mark pattern</h3>
+ * <h3>High water mark</h3>
  * <ul>
- *   <li>{@code heldKeys} — keys physically held RIGHT NOW</li>
- *   <li>{@code highWaterMark} — largest set of simultaneously-held keys
- *       seen during this capture session</li>
+ *   <li>{@code heldKeys}: the keys physically held right now</li>
+ *   <li>{@code highWaterMark}: the largest set of keys held at once during
+ *       this capture</li>
  * </ul>
- * Keys accumulate in {@code heldKeys}; whenever it grows past the previous
- * mark, the mark advances (capped at {@link Chord#MAX_CHORD}). When all keys
- * release and the mark is non-empty, the binding finalizes via {@code onFinalize}.
+ * Keys collect in {@code heldKeys}; whenever it grows past the previous mark,
+ * the mark grows with it (up to {@link Chord#MAX_CHORD}). When every key is
+ * released and the mark isn't empty, the binding is finished via
+ * {@code onFinalize}.
  *
- * <h3>Escape and Delete/Backspace</h3>
+ * <h3>Escape, Delete and Backspace</h3>
  * <ul>
- *   <li>Escape ALWAYS cancels capture (via {@code onCancel}).</li>
- *   <li>Delete/Backspace clears the binding to UNBOUND (via {@code onClear}).</li>
+ *   <li>Escape always cancels the capture (via {@code onCancel}).</li>
+ *   <li>Delete or Backspace clears the binding to UNBOUND (via {@code onClear}).</li>
  * </ul>
  *
- * <p>Migrated verbatim from MenuKit's {@code MKKeybindCapture} (2026-05-18),
- * with type renames only.
+ * <p>Taken unchanged from MenuKit's {@code MKKeybindCapture}, apart from type
+ * renames.
  */
 public class ChordCapture {
 
     private static final long GLFW_FALLBACK_TIMEOUT_MS = 2000;
 
-    /** The KeyMapping currently being captured, or null. Set by the controls-
-     *  screen mixin so the {@link com.trevorschoeny.keybindery.mixin.KeyMappingChordMixin}
-     *  can render a live preview in {@code getTranslatedKeyMessage}. */
+    /**
+     * The KeyMapping being captured, or null. Set by the controls-screen mixin
+     * so {@link com.trevorschoeny.keybindery.mixin.KeyMappingChordMixin} can
+     * render a live preview in {@code getTranslatedKeyMessage}.
+     */
     public static KeyMapping activeMapping;
 
     /** The active capture engine, or null. */
@@ -126,8 +129,11 @@ public class ChordCapture {
         return true;
     }
 
-    /** Render-loop safety: if no events arrive for 2+ seconds, poll GLFW
-     *  directly. Catches alt-tab / focus-loss where release events get dropped. */
+    /**
+     * Safety net for the render loop: if no events arrive for 2 seconds or
+     * more, poll GLFW directly. Catches alt-tab and focus loss, where release
+     * events get dropped.
+     */
     public void checkGLFWFallback(long windowHandle) {
         if (!capturing || highWaterMark.isEmpty()) return;
         long now = System.currentTimeMillis();
@@ -139,8 +145,10 @@ public class ChordCapture {
         if (!anyHeld) { heldKeys.clear(); finalizeCapture(); }
     }
 
-    /** Per-frame release polling — for vanilla KeyBindsScreen where concrete
-     *  mixin methods can't reliably receive release events. */
+    /**
+     * Polls for releases each frame, for vanilla's KeyBindsScreen, where mixin
+     * methods can't reliably receive release events.
+     */
     public void pollReleases(long windowHandle) {
         if (!capturing || heldKeys.isEmpty()) return;
         heldKeys.removeIf(key -> !isKeyHeld(windowHandle, key));

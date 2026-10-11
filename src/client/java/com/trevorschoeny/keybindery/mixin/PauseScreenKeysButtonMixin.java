@@ -21,8 +21,8 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
  * <p>Vanilla builds that row as one horizontal {@link LinearLayout} and hands
  * it to the pause grid. This catches the hand-off and appends one more child,
  * so the strip spaces and re-centres itself; nothing is positioned by hand.
- * MenuKit leaves the pause menu's own layout alone (same call as Sandboxes,
- * 2026-09-11), so the mod owns this mixin.
+ * MenuKit leaves the pause menu's own layout alone (as it does for Sandboxes),
+ * so the mod owns this mixin.
  *
  * <p>Clicking opens vanilla {@link KeyBindsScreen}; {@link MinecraftSetScreenMixin}
  * swaps in Keybindery's screen, so the replacement kill-switch still applies.
@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 @Mixin(PauseScreen.class)
 public abstract class PauseScreenKeysButtonMixin {
 
-    /** Placeholder art until Trev draws the real one; replace the PNG, no code change. */
+    /** Placeholder art for now; the real art only means replacing the PNG, no code change. */
     private static final Identifier KEYS_SPRITE =
             Identifier.fromNamespaceAndPath("keybindery", "pause_menu/keys");
 

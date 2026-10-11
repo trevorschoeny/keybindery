@@ -19,19 +19,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Client-side entry point for Keybindery.
- *
- * <p>Section 1 wires up:
+ * Client-side entry point for Keybindery. Everything Keybindery does happens
+ * on the client. Among other things it sets up:
  * <ul>
- *   <li>Config load on init.</li>
- *   <li>Toggle keybind "Simultaneous Mode" — default unbound. When pressed,
- *       flips {@link KeybinderyConfig#simultaneousMode} and saves.</li>
- *   <li>Per-tick check that drains the toggle keybind's click queue so the
- *       toggle fires on each press regardless of which screen is open.</li>
+ *   <li>Loading the config.</li>
+ *   <li>The "Simultaneous Mode" toggle keybind, unbound by default. Pressing
+ *       it flips {@link KeybinderyConfig#simultaneousMode} and saves.</li>
+ *   <li>A per-tick check that drains the toggle's click queue, so the toggle
+ *       fires on each press whichever screen is open.</li>
  * </ul>
- *
- * <p>Per the establishing ADR (§0030 in @ Trevlar Mods canon), this mod is
- * client-only.
  */
 public class KeybinderyClient implements ClientModInitializer {
 
@@ -41,16 +37,17 @@ public class KeybinderyClient implements ClientModInitializer {
     public static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(
             Identifier.fromNamespaceAndPath("keybindery", "controls"));
 
-    /** The Simultaneous Mode toggle keybind. Default unbound — players opt in. */
+    /** The Simultaneous Mode toggle keybind. Unbound by default, so players opt in. */
     public static KeyMapping SIMULTANEOUS_MODE_TOGGLE;
 
     /**
-     * F1 demo keybind. Bindable from Keybindery's own YACL config screen via
+     * Demo keybind for the in-config keybind API. Bindable from Keybindery's own
+     * YACL config screen via
      * {@link com.trevorschoeny.keybindery.api.KeybinderyAPI#createYACLChordOption}.
-     * Demonstrates the F1 API end-to-end — a YACL chord row that captures and
+     * Shows the API working end to end: a YACL chord row that captures and
      * applies a multi-key chord. Logs each time the chord fires so the player
-     * sees feedback. (Real consumer mods register their own keybinds and use
-     * F1 the same way; this one's just a live demo inside Keybindery itself.)
+     * sees feedback. (Real consumer mods register their own keybinds and use the
+     * API the same way; this one is only a live demo inside Keybindery itself.)
      */
     public static KeyMapping F1_DEMO_CHORD;
 
@@ -58,11 +55,11 @@ public class KeybinderyClient implements ClientModInitializer {
     public void onInitializeClient() {
         KeybinderyConfig.load();
 
-        // F1 — install the real KeybinderyAPI implementation. Consumer mods
-        // calling KeybinderyAPI.getInstance() now get the live impl instead
-        // of the stub. Per Trev's silent-fail directive, this only happens
-        // when keybindery main is loaded; otherwise the stub remains and
-        // consumer code no-ops gracefully.
+        // Install the real KeybinderyAPI implementation. Consumer mods calling
+        // KeybinderyAPI.getInstance() now get the live implementation instead
+        // of the stub. This only happens when Keybindery itself is loaded;
+        // otherwise the stub stays and consumer code quietly does nothing, so
+        // consumers never crash when Keybindery is missing.
         KeybinderyAPIHolder.install(new KeybinderyAPIImpl());
 
         SIMULTANEOUS_MODE_TOGGLE = KeyMappingHelper.registerKeyMapping(new KeyMapping(
@@ -79,30 +76,30 @@ public class KeybinderyClient implements ClientModInitializer {
                 CATEGORY
         ));
 
-        // Apply persisted chord state from options.txt as soon as the
-        // client is fully started — after all mods' onInitializeClient
-        // ran and Fabric aggregated their keybinds into Options.keyMappings.
-        // Until this fires, OptionsChordPersistenceMixin.save no-ops so we
-        // don't wipe chord lines we haven't yet loaded into memory.
+        // Apply the saved chords from options.txt once the client has fully
+        // started, after every mod's onInitializeClient has run and Fabric has
+        // collected their keybinds into Options.keyMappings.
+        // Until this fires, OptionsChordPersistenceMixin.save does nothing, so
+        // it can't wipe chord lines that haven't been loaded into memory yet.
         ClientLifecycleEvents.CLIENT_STARTED.register(client ->
                 ChordPersistence.applyChordsFromOptionsTxt(client.options));
 
-        // F4 — register the MK-hosted toolbar panel (chord-capture button +
-        // sort/filter dropdowns) onto Keybindery's controls screen. The
-        // vanilla EditBox for name search lives as a sibling renderable
-        // widget on the screen itself (see KeybinderyKeyBindsScreen.init).
+        // Register the MenuKit toolbar panel (chord-capture button and the sort
+        // and filter dropdowns) on Keybindery's controls screen. The vanilla
+        // EditBox for name search is a separate widget on the screen itself
+        // (see KeybinderyKeyBindsScreen.init).
         ControlsToolbarPanel.install();
 
-        // F2 — auto-list mod keybinds on ModMenu-launched config screens.
-        // Two complementary surfaces:
-        //  • YACL screens get a native "Keybinds" tab injected at YACL
-        //    Builder.build() HEAD (see YACLBuilderInjectMixin).
-        //  • Non-YACL screens get a top-right MK overlay button that
-        //    opens the controls screen pre-filtered to that mod's keybinds
+        // List each mod's keybinds on config screens opened from ModMenu, in
+        // one of two ways:
+        //  - YACL screens get a native "Keybinds" tab, injected at the HEAD of
+        //    YACL's Builder.build() (see YACLBuilderInjectMixin).
+        //  - Other screens get a top-right MenuKit overlay button that opens
+        //    the controls screen filtered to that mod's keybinds
         //    (KeybinderyKeyBindsScreen.openWithModFilterFor).
-        // Both gate on ModConfigKeybindsRegistry's (modId → screen) lookup,
-        // populated by ModMenuConfigScreenMixin. YACL screens fall back to
-        // stack-walking when ModMenu is absent.
+        // Both depend on ModConfigKeybindsRegistry's modId-to-screen lookup,
+        // filled in by ModMenuConfigScreenMixin. YACL screens fall back to
+        // walking the stack when ModMenu is absent.
         ModKeybindsOverlayPanel.install();
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
@@ -118,9 +115,9 @@ public class KeybinderyClient implements ClientModInitializer {
                             "[Keybindery] Simultaneous Mode: " + (cfg.simultaneousMode ? "ON" : "OFF")));
                 }
             }
-            // F1 demo: log + action-bar message each time the demo chord
-            // fires so visible feedback proves end-to-end dispatch works
-            // without making the player open the launcher log.
+            // Demo chord: log and show an action-bar message each time it
+            // fires, so the player can see dispatch working without opening
+            // the launcher log.
             while (F1_DEMO_CHORD.consumeClick()) {
                 LOGGER.info("[Keybindery] F1 demo chord fired!");
                 if (client.player != null) {

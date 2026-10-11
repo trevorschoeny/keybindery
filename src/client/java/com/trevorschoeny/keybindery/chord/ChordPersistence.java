@@ -15,19 +15,19 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 /**
- * Shared options.txt chord persistence routines, called from two places:
+ * Saving and loading chords in options.txt, called from two places:
  *
  * <ul>
- *   <li>{@code OptionsChordPersistenceMixin.save} TAIL — every options
- *       save (vanilla path).</li>
- *   <li>{@code KeybinderyClient}'s first-tick hook — applies chord state
- *       once after Fabric mod-init has aggregated all mods' keybinds into
- *       {@code Options.keyMappings}. The save-side mixin loads at
- *       {@code Options.load} TAIL run too early for Fabric-registered
- *       keybinds (they're added later, during {@code ClientModInitializer.onInitializeClient}).</li>
+ *   <li>{@code OptionsChordPersistenceMixin.save} TAIL, on every options save
+ *       (vanilla's path).</li>
+ *   <li>{@code KeybinderyClient}'s client-started hook, which applies chords
+ *       once after Fabric mod init has collected every mod's keybinds into
+ *       {@code Options.keyMappings}. Loading at {@code Options.load} TAIL
+ *       would run too early for Fabric-registered keybinds, which are added
+ *       later, during {@code ClientModInitializer.onInitializeClient}.</li>
  * </ul>
  *
- * <p>Idempotent: each call rewrites or re-reads, never appends/duplicates.
+ * <p>Idempotent: each call rewrites or re-reads, never appends or duplicates.
  */
 public final class ChordPersistence {
 
@@ -37,8 +37,8 @@ public final class ChordPersistence {
 
     /**
      * True once {@link #applyChordsFromOptionsTxt} has run successfully.
-     * The save-side mixin checks this — if false, it skips rewriting chord
-     * lines so we don't wipe state we haven't yet loaded into memory.
+     * The save-side mixin checks this. While it is false, the mixin skips
+     * rewriting chord lines, so it can't wipe chords not yet loaded into memory.
      */
     public static volatile boolean appliedFromOptionsTxt = false;
 
@@ -46,14 +46,14 @@ public final class ChordPersistence {
 
     /**
      * Reads {@code options.txt} and applies any {@code key_chord_*} lines
-     * to matching keymappings via {@link IChordKeyMapping#updateFromChord}.
-     * Safe to call multiple times; chord state already-applied is a no-op
+     * to matching key mappings via {@link IChordKeyMapping#updateFromChord}.
+     * Safe to call more than once; applying a chord again changes nothing
      * (the duck interface just overwrites the field).
      */
     public static void applyChordsFromOptionsTxt(Options options) {
         Path optionsFile = optionsFilePath();
         if (optionsFile == null || !Files.exists(optionsFile)) {
-            appliedFromOptionsTxt = true; // no file = nothing to load, save is safe
+            appliedFromOptionsTxt = true; // no file, nothing to load, so saving is safe
             return;
         }
         if (options == null || options.keyMappings == null) return;
@@ -79,7 +79,7 @@ public final class ChordPersistence {
         } catch (IOException e) {
             LOGGER.warn("[Keybindery] Failed to load chord state from {}: {}",
                     optionsFile, e.getMessage());
-            return; // do NOT set the flag on failure — leave save in safe mode
+            return; // leave the flag unset on failure, so save stays in safe mode
         }
 
         LOGGER.info("[Keybindery] Applied {} chord(s) from options.txt", applied[0]);

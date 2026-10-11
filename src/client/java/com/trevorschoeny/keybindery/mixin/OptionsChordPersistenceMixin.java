@@ -22,36 +22,35 @@ import java.util.List;
 import java.util.stream.Stream;
 
 /**
- * Persists each {@link KeyMapping}'s multi-key chord to vanilla's
- * {@code options.txt} per Trev's Q5 directive (2026-05-18): invade
- * {@code options.txt} rather than a sidecar file, so chord state lives WITH
- * the keybind state and is visible to anyone inspecting the options file.
+ * Saves each {@link KeyMapping}'s multi-key chord in vanilla's
+ * {@code options.txt} rather than a separate file, so chords live with the
+ * rest of the keybinds and anyone reading the options file can see them.
  *
  * <p>Line format added by this mixin: {@code key_chord_<keymap_name>:<serialized>}.
- * Vanilla ignores unknown lines on load (no crash), so the additions are
- * forward-compatible with vanilla and other mods reading the same file.
+ * Vanilla ignores unknown lines on load (no crash), so the extra lines are
+ * safe for vanilla and for other mods reading the same file.
  *
- * <h3>Two-phase save (preserve-across-save)</h3>
- * Vanilla's {@code save()} completely rewrites {@code options.txt} — every
- * line vanilla doesn't write is lost. If save fires before
- * {@link ChordPersistence#applyChordsFromOptionsTxt} has run, the in-memory
- * chord field is UNBOUND for everything, so writing fresh chord lines from
- * memory would wipe persisted chord state.
+ * <h3>Saving in two steps</h3>
+ * Vanilla's {@code save()} rewrites {@code options.txt} completely, and every
+ * line vanilla doesn't write is lost. If a save happens before
+ * {@link ChordPersistence#applyChordsFromOptionsTxt} has run, every chord in
+ * memory is still UNBOUND, so writing chord lines from memory would wipe the
+ * saved chords.
  *
- * <p>To survive this, save uses a snapshot-and-restore pattern:
+ * <p>So the save takes a snapshot and restores it:
  * <ul>
- *   <li><b>HEAD inject:</b> reads existing {@code key_chord_*} lines from
- *       {@code options.txt} BEFORE vanilla rewrites it. Snapshot stored on
- *       the Options instance via {@code @Unique} field.</li>
- *   <li><b>TAIL inject:</b> after vanilla wrote its content, our chord
- *       lines need to be re-added.
+ *   <li><b>HEAD inject:</b> reads the existing {@code key_chord_*} lines from
+ *       {@code options.txt} before vanilla rewrites it, and keeps them in a
+ *       {@code @Unique} field on the Options instance.</li>
+ *   <li><b>TAIL inject:</b> after vanilla has written its content, the chord
+ *       lines are added back.
  *       <ul>
- *         <li>If {@link ChordPersistence#appliedFromOptionsTxt} is true
- *             (apply ran), write fresh chord lines from in-memory keymap
- *             state — that's the canonical source of truth.</li>
- *         <li>If false (save fired before apply, e.g., during Options
- *             constructor), restore the HEAD snapshot — preserves chord
- *             state we haven't yet loaded.</li>
+ *         <li>If {@link ChordPersistence#appliedFromOptionsTxt} is true (the
+ *             chords were loaded), it writes fresh chord lines from the key
+ *             mappings in memory, which are the source of truth.</li>
+ *         <li>If false (the save ran before loading, for example during the
+ *             Options constructor), it restores the HEAD snapshot, keeping
+ *             chords that haven't been loaded yet.</li>
  *       </ul>
  *   </li>
  * </ul>
@@ -61,8 +60,7 @@ import java.util.stream.Stream;
  * {@code KeybinderyClient} on {@code ClientLifecycleEvents.CLIENT_STARTED}
  * (after Fabric mod init).
  *
- * <p>Per §0003 (Keybindery canon): no {@code cancellable} on either inject —
- * both are pure side-effect hooks.
+ * <p>Neither inject is {@code cancellable}; both only add to what vanilla does.
  */
 @Mixin(Options.class)
 public abstract class OptionsChordPersistenceMixin {
@@ -71,8 +69,10 @@ public abstract class OptionsChordPersistenceMixin {
 
     private static final String CHORD_LINE_PREFIX = ChordPersistence.CHORD_LINE_PREFIX;
 
-    /** Chord lines snapshotted from options.txt at save HEAD, used to
-     *  restore at save TAIL when apply hasn't run yet. */
+    /**
+     * Chord lines read from options.txt at save HEAD, restored at save TAIL
+     * when the chords haven't been loaded yet.
+     */
     @Unique
     private List<String> keybindery$chordLinesSnapshot;
 
@@ -114,8 +114,8 @@ public abstract class OptionsChordPersistenceMixin {
         }
 
         try {
-            // Read what vanilla wrote, strip any existing chord lines (so we
-            // don't duplicate), then append our chord lines.
+            // Read what vanilla wrote, drop any existing chord lines (so none are
+            // duplicated), then append the chord lines.
             List<String> existing;
             try (Stream<String> stream = Files.lines(optionsFile)) {
                 existing = stream

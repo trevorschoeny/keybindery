@@ -15,17 +15,17 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Real {@link KeybinderyAPI} implementation, registered by keybindery main
- * at client init via {@link KeybinderyAPIHolder#install(KeybinderyAPI)}.
+ * The real {@link KeybinderyAPI} implementation, registered by Keybindery at
+ * client init via {@link KeybinderyAPIHolder#install(KeybinderyAPI)}.
  *
- * <p>Bridges the public api to keybindery main's internal chord engine:
+ * <p>Connects the public API to Keybindery's internal chord code:
  * <ul>
- *   <li>{@code getChord} / {@code setChord} delegate to the
+ *   <li>{@code getChord} and {@code setChord} delegate to the
  *       {@link IChordKeyMapping} duck interface mixed into every vanilla
  *       {@link KeyMapping}.</li>
  *   <li>{@code createYACLChordOption} returns an {@link Option}{@code <Chord>}
- *       with the custom {@link ChordController} — inline capture, no modal
- *       screen, mirrors vanilla's keybind-button UX.</li>
+ *       with the custom {@link ChordController}: inline capture, no modal
+ *       screen, like vanilla's keybind button.</li>
  * </ul>
  */
 @ApiStatus.Internal
@@ -48,12 +48,12 @@ public final class KeybinderyAPIImpl implements KeybinderyAPI {
 
     @Override
     public Collection<? extends Option<?>> createYACLChordOption(KeyMapping mapping, Component label, OptionDescription description) {
-        // Using this widget claims the mapping for the consumer's own UI —
-        // auto-append (F2) will skip it elsewhere.
+        // Using this widget claims the mapping for the consumer's own UI, so
+        // the auto-append fallback skips it elsewhere.
         ClaimRegistry.mark(mapping);
-        // Two-row layout — label on top, three buttons below. See javadoc
-        // on KeybinderyAPI#createYACLChordOption for why the API returns
-        // a collection instead of a single Option.
+        // Two rows: the label on top, three buttons below. The javadoc on
+        // KeybinderyAPI#createYACLChordOption explains why the API returns a
+        // collection instead of a single Option.
         return List.of(
                 LabelOption.create(label),
                 Option.<Chord>createBuilder()
@@ -61,9 +61,9 @@ public final class KeybinderyAPIImpl implements KeybinderyAPI {
                         .description(description)
                         .binding(
                                 // YACL's "reset to default" uses this as the
-                                // target. Must be the keymapping's actual
-                                // default, not UNBOUND — otherwise Reset
-                                // clears the binding instead of restoring it.
+                                // target. It must be the key mapping's actual
+                                // default, not UNBOUND, or Reset would clear
+                                // the binding instead of restoring it.
                                 IChordKeyMapping.defaultChord(mapping),
                                 () -> getChord(mapping),
                                 chord -> setChord(mapping, chord))

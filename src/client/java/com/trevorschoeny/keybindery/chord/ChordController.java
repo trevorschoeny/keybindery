@@ -11,16 +11,17 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.network.chat.Component;
 
 /**
- * YACL {@link Controller} for {@link Chord} values — F1's in-config keybind
+ * YACL {@link Controller} for {@link Chord} values: the in-config keybind
  * row. Each row holds the chord for one {@link KeyMapping}. The widget
- * ({@link ChordControllerWidget}) mimics vanilla's keybind button: click
- * to enter capture mode, press a multi-key chord, release to apply.
- * No modal screens.
+ * ({@link ChordControllerWidget}) works like vanilla's keybind button: click
+ * to start capturing, press a multi-key chord, release to apply. No modal
+ * screens.
  *
- * <p>The {@code mapping} field travels with the controller so the widget
- * can register itself as the "active capture" target (so other parts of
- * Keybindery's machinery — e.g., {@link com.trevorschoeny.keybindery.mixin.KeyMappingChordMixin}'s
- * live-preview path — know which mapping is being bound).
+ * <p>The {@code mapping} field travels with the controller so the widget can
+ * register itself as the active capture target, which tells other parts of
+ * Keybindery (for example the live-preview path in
+ * {@link com.trevorschoeny.keybindery.mixin.KeyMappingChordMixin}) which
+ * mapping is being bound.
  */
 public class ChordController implements Controller<Chord> {
 
@@ -44,9 +45,9 @@ public class ChordController implements Controller<Chord> {
             return Component.literal(">> click to bind <<");
         }
         Component chordDisplay = chord.getDisplayName();
-        // Yellow-bracket conflict indicator — matches the vanilla KeyBindsList
-        // conflict rule (chord-aware via ChordConflicts: any-key overlap with
-        // another non-self mapping, suppressed when both are Mojang-default).
+        // Yellow brackets mark a conflict, matching the KeyBindsList rule
+        // (chord-aware via ChordConflicts: any shared key with another mapping,
+        // ignored when both are Mojang defaults).
         if (ChordConflicts.hasAnyConflict(mapping)) {
             return Component.literal("[ ")
                     .append(chordDisplay.copy().withStyle(ChatFormatting.WHITE))

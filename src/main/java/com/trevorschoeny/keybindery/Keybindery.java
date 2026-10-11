@@ -12,6 +12,6 @@ import net.fabricmc.api.ModInitializer;
 public final class Keybindery implements ModInitializer {
     @Override
     public void onInitialize() {
-        // ponytail: deliberately empty; the server half of Keybindery is its absence.
+        // Deliberately empty: Keybindery has nothing to do on a server.
     }
 }

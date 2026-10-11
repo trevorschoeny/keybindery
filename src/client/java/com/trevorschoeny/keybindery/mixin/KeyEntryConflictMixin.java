@@ -8,9 +8,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 /**
- * Replaces vanilla's single-key {@link KeyMapping#same(KeyMapping)} equality
- * inside {@code KeyBindsList$KeyEntry.refreshEntry} with chord-aware overlap
- * via {@link ChordConflicts#hasAnyOverlap(KeyMapping, KeyMapping)}.
+ * Replaces vanilla's single-key {@link KeyMapping#same(KeyMapping)} check in
+ * {@code KeyBindsList$KeyEntry.refreshEntry} with chord-aware overlap through
+ * {@link ChordConflicts#hasAnyOverlap(KeyMapping, KeyMapping)}.
  *
  * <p>Vanilla's check (line 169 of {@code KeyBindsList}):
  * <pre>
@@ -19,17 +19,16 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  *       && (!keyMapping.isDefault() || !this.key.isDefault())) { ... hasCollision = true ... }
  * </pre>
  *
- * <p>Vanilla's {@code same()} returns true iff the two mappings' primary
- * vanilla key codes match (single-key equality). That misses chord overlap
- * cases like {@code R} vs {@code R+E} when the chord's primary differs
- * from the single key. The {@code @Redirect} swaps in {@code hasAnyOverlap}
- * — chord-aware any-key intersection — and lets vanilla's downstream
- * default-suppression check fire on the result unchanged. Yellow brackets
- * then surface for partial-chord overlaps but stay suppressed for
- * Mojang-blessed both-at-default pairings.
+ * <p>Vanilla's {@code same()} is true only if the two mappings' primary key
+ * codes match. That misses chord overlaps like {@code R} against {@code R+E}
+ * when the chord's primary key isn't the single key. The {@code @Redirect}
+ * swaps in {@code hasAnyOverlap} (true if the chords share any key), and
+ * vanilla's default check after it runs on the result unchanged. Yellow
+ * brackets then show for partial chord overlaps, but not for vanilla pairs
+ * that are both at their defaults.
  *
- * <p>Precise injection per §0030 (no {@code @Overwrite}); a single
- * {@code @Redirect} on the narrowest viable call site.
+ * <p>No {@code @Overwrite}: each change is a {@code @Redirect} on the
+ * narrowest call site that works.
  */
 @Mixin(KeyBindsList.KeyEntry.class)
 public abstract class KeyEntryConflictMixin {
@@ -41,22 +40,22 @@ public abstract class KeyEntryConflictMixin {
         return ChordConflicts.hasAnyOverlap(self, other);
     }
 
-    // Vanilla's conflict-suppression line is:
+    // Vanilla's conflict line is:
     //   if (... && this.key.same(km) && (!km.isDefault() || !this.key.isDefault())) { ... }
-    // The both-at-default suppression there is supposed to be "Mojang-blessed
-    // intentional overlap." But vanilla's `isDefault()` returns true for any
-    // mapping at its OWN default — including a mod that happened to ship its
-    // default at the same key vanilla uses. Trev's example: IP keybind defaults
-    // to S; vanilla walk-back defaults to S. Both isDefault → vanilla suppresses,
-    // even though Mojang didn't bless that overlap (the mod chose S unilaterally).
+    // The both-at-default exception is meant for overlaps Mojang intended. But
+    // isDefault() is true for any mapping at its own default, including a mod
+    // that happened to ship the same default key as vanilla. For example, an
+    // Inventory Plus keybind defaults to S, and vanilla's walk-back defaults to
+    // S. Both are at default, so vanilla hides the conflict, though Mojang never
+    // chose that overlap (the mod picked S on its own).
     //
-    // Fix: redirect the two isDefault() calls inside the loop condition so they
-    // only treat a mapping as "at default" when it's actually a VANILLA mapping.
-    // Mod-default mappings get false, which makes vanilla's (!a || !b) check
-    // trivially pass and the conflict surfaces.
+    // So the two isDefault() calls in the loop condition are redirected to count
+    // a mapping as at its default only when it is a vanilla mapping. A mod
+    // mapping gets false, so vanilla's (!a || !b) check passes and the conflict
+    // shows.
     //
-    // ordinal=0 is the resetButton.active call earlier in the method — left
-    // alone so reset still disables correctly on mod-default-bound mappings.
+    // ordinal=0 is the resetButton.active call earlier in the method. It is
+    // left alone so reset still disables correctly for mod mappings at default.
 
     @Redirect(method = "refreshEntry",
             at = @At(value = "INVOKE",
