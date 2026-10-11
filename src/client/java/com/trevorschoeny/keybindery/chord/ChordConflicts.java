@@ -111,7 +111,7 @@ public final class ChordConflicts {
                     .map(k -> k.getDisplayName().getString())
                     .reduce((a, b) -> a + ", " + b)
                     .orElse("");
-            lines.add(Component.literal("  - " + c.label() + " (" + c.category() + ") — shares: " + sharedStr)
+            lines.add(Component.literal("  - " + c.label() + " (" + c.category() + "), shares: " + sharedStr)
                     .withStyle(net.minecraft.ChatFormatting.GRAY));
         }
         return lines;

@@ -82,7 +82,7 @@ public final class KeybinderyConfigScreen {
                         "API. The same widget consumer mods get by calling " +
                         "KeybinderyAPI.getInstance().createYACLChordOption(...).\n\n" +
                         "When the chord fires in-game, Keybindery logs " +
-                        "\"F1 demo chord fired!\" — watch the launcher log " +
+                        "\"F1 demo chord fired!\", watch the launcher log " +
                         "to see it in action.")));
 
         Option<Boolean> disableControlsReplacement = Option.<Boolean>createBuilder()
