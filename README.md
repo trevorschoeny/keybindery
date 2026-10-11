@@ -19,7 +19,7 @@ Keybindery installs on both client and server. On a server it does nothing by it
 Drop the jar in your `mods/` folder along with Fabric API. YACL is bundled inside the jar.
 
 Requires:
-- Minecraft 26.2 (this build)
+- Minecraft 26.3 (this build)
 - Fabric Loader 0.19.5 or newer
 - Fabric API
 - MenuKit 6.1.0 or newer, below 7.0.0
