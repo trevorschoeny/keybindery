@@ -47,12 +47,12 @@ public final class ChordPressBuffer {
     }
 
     private static InputConstants.Key normalize(InputConstants.Key key) {
-        if (key.getType() == InputConstants.Type.KEYSYM) {
+        if (key.getType() == InputConstants.Type.KEYBOARD) {
             int code = key.getValue();
-            if (code == InputConstants.KEY_RSHIFT)   return InputConstants.Type.KEYSYM.getOrCreate(InputConstants.KEY_LSHIFT);
-            if (code == InputConstants.KEY_RCONTROL) return InputConstants.Type.KEYSYM.getOrCreate(InputConstants.KEY_LCONTROL);
-            if (code == InputConstants.KEY_RALT)     return InputConstants.Type.KEYSYM.getOrCreate(InputConstants.KEY_LALT);
-            if (code == InputConstants.KEY_RSUPER)   return InputConstants.Type.KEYSYM.getOrCreate(InputConstants.KEY_LSUPER);
+            if (code == InputConstants.KEY_RSHIFT)   return InputConstants.Type.KEYBOARD.getOrCreate(InputConstants.KEY_LSHIFT);
+            if (code == InputConstants.KEY_RCONTROL) return InputConstants.Type.KEYBOARD.getOrCreate(InputConstants.KEY_LCONTROL);
+            if (code == InputConstants.KEY_RALT)     return InputConstants.Type.KEYBOARD.getOrCreate(InputConstants.KEY_LALT);
+            if (code == InputConstants.KEY_RGUI)   return InputConstants.Type.KEYBOARD.getOrCreate(InputConstants.KEY_LGUI);
         }
         return key;
     }

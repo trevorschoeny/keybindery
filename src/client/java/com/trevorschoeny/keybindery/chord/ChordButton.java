@@ -146,9 +146,9 @@ public class ChordButton extends AbstractPanelElement {
         // drop it so the shared static capture state stops eating keys.
         if (capture != null && disabled(ctx)) stopCapture();
         ChildDispatch.render(children, ctx.disabledIf(ownDisabled()));
-        // Releases don't reach panel elements as key events; poll GLFW each
-        // frame, exactly as the YACL widget does.
-        if (capture != null) capture.pollReleases(Minecraft.getInstance().getWindow().handle());
+        // Releases don't reach panel elements as key events; poll the input
+        // state each frame, exactly as the YACL widget does.
+        if (capture != null) capture.pollReleases();
     }
 
     // Input. ChildDispatch hit-tests each child and skips them all when disabled.
@@ -172,9 +172,7 @@ public class ChordButton extends AbstractPanelElement {
     @Override
     public boolean keyPressed(InputContext in, int keyCode, int scanCode, int modifiers) {
         if (capture == null) return false;
-        capture.onKeyPressed(keyCode == InputConstants.UNKNOWN.getValue()
-                ? InputConstants.Type.SCANCODE.getOrCreate(scanCode)
-                : InputConstants.Type.KEYSYM.getOrCreate(keyCode));
+        capture.onKeyPressed(InputConstants.Type.KEYBOARD.getOrCreate(keyCode));
         return true;
     }
 

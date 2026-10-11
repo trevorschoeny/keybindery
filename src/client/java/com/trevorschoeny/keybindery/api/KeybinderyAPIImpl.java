@@ -83,7 +83,6 @@ public final class KeybinderyAPIImpl implements KeybinderyAPI {
 
     @Override
     public boolean isHeld(KeyMapping mapping) {
-        long windowHandle = Minecraft.getInstance().getWindow().handle();
-        return getChord(mapping).isActiveHeld(windowHandle);
+        return getChord(mapping).isActiveHeld();
     }
 }

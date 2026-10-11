@@ -32,7 +32,7 @@ import java.util.Map;
  *       fire). Here every matching chord fires, so those suppression methods
  *       are gone.</li>
  *   <li><b>Two detection modes.</b> With {@code simultaneousMode} off (the
- *       default), {@code setDown(true)} polls GLFW to check all keys are held.
+ *       default), {@code setDown(true)} polls the input state to check all keys are held.
  *       With it on, it checks the {@link ChordPressBuffer} times against the
  *       configured window. Both decide the same vanilla setDown call.</li>
  *   <li><b>Fires again on a new press.</b> A chord fires again when its
@@ -77,8 +77,7 @@ public abstract class KeyMappingChordMixin implements IChordKeyMapping {
             long now = System.currentTimeMillis();
             active = keybindery$chord.isActiveSimultaneous(k -> ChordPressBuffer.get().lastPress(k), windowMs, now);
         } else {
-            long windowHandle = Minecraft.getInstance().getWindow().handle();
-            active = keybindery$chord.isActiveHeld(windowHandle);
+            active = keybindery$chord.isActiveHeld();
         }
 
         if (!active) {
@@ -100,7 +99,6 @@ public abstract class KeyMappingChordMixin implements IChordKeyMapping {
         boolean simultaneous = KeybinderyConfig.get().simultaneousMode;
         long windowMs = KeybinderyConfig.get().simultaneousWindowMs;
         long now = System.currentTimeMillis();
-        long windowHandle = Minecraft.getInstance().getWindow().handle();
 
         for (KeyMapping mapping : mappings) {
             Chord chord = ((IChordKeyMapping) mapping).keybindery$getChord();
@@ -108,7 +106,7 @@ public abstract class KeyMappingChordMixin implements IChordKeyMapping {
 
             boolean active = simultaneous
                     ? chord.isActiveSimultaneous(k -> ChordPressBuffer.get().lastPress(k), windowMs, now)
-                    : chord.isActiveHeld(windowHandle);
+                    : chord.isActiveHeld();
 
             if (!active) {
                 ((KeyMappingAccessor) mapping).keybindery$setClickCount(0);

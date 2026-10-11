@@ -14,7 +14,6 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import com.mojang.blaze3d.platform.InputConstants;
-import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,15 +63,15 @@ public class KeybinderyClient implements ClientModInitializer {
 
         SIMULTANEOUS_MODE_TOGGLE = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.keybindery.toggle_simultaneous_mode",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_UNKNOWN,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.UNKNOWN.getValue(),
                 CATEGORY
         ));
 
         F1_DEMO_CHORD = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.keybindery.f1_demo_chord",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_UNKNOWN,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.UNKNOWN.getValue(),
                 CATEGORY
         ));
 

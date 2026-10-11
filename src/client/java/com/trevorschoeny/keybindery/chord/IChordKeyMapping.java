@@ -37,12 +37,12 @@ public interface IChordKeyMapping {
      * Returns the effective chord for the given mapping. If a multi-key chord
      * has been set via the duck interface, returns that. Otherwise wraps the
      * mapping's single vanilla key as a one-key {@link Chord}, preserving the
-     * original {@link InputConstants.Type} (KEYSYM, MOUSE, or SCANCODE).
+     * original {@link InputConstants.Type} (KEYBOARD or MOUSE).
      *
      * <p>Keeping the type matters: {@code Chord.ofKey(int)} always assumes
-     * KEYSYM, which would turn a MOUSE binding (left=0, right=1, middle=2)
-     * into a KEYSYM key with the same value. Vanilla's fallback name for those
-     * unknown KEYSYM values collides with the digit keys' names, which gave
+     * KEYBOARD, which would turn a MOUSE binding (left=1, right=3, middle=2)
+     * into a KEYBOARD key with the same value. Vanilla's fallback name for those
+     * unknown KEYBOARD values collides with the digit keys' names, which gave
      * false conflicts (left mouse against hotbar 1, and so on). Wrapping the
      * actual {@code Key} keeps the type, so the chord's name-based comparison
      * tells them apart.
@@ -73,7 +73,7 @@ public interface IChordKeyMapping {
         } else {
             // primaryKey() keeps the InputConstants.Type, so a chord whose
             // primary is a MOUSE button stays MOUSE on the KeyMapping (and
-            // saves as key.mouse.left, not key.keyboard.0). Building a KEYSYM
+            // saves as key.mouse.left, not key.keyboard.0). Building a KEYBOARD key
             // from the int code instead silently broke mouse bindings.
             mapping.setKey(chord.primaryKey());
             ((IChordKeyMapping) mapping).keybindery$setChord(chord);
@@ -100,9 +100,9 @@ public interface IChordKeyMapping {
     }
 
     /**
-     * Returns the GLFW key code of the given KeyMapping's current key binding.
+     * Returns the key code of the given KeyMapping's current key binding.
      * Works around {@code KeyMapping.key} being protected with no public getter
-     * in vanilla MC 26.2.
+     * in vanilla.
      */
     static int getKeyCode(KeyMapping mapping) {
         try {

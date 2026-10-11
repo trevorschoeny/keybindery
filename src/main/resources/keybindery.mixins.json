@@ -16,7 +16,8 @@
     "MinecraftSetScreenMixin",
     "OptionsChordPersistenceMixin",
     "OptionsSubScreenAccessor",
-    "PauseScreenKeysButtonMixin"
+    "PauseScreenKeysButtonMixin",
+    "MouseButtonStateMixin"
   ],
   "injectors": {
     "defaultRequire": 1

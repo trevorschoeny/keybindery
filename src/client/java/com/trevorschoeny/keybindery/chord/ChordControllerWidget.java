@@ -196,9 +196,9 @@ public class ChordControllerWidget extends ControllerWidget<ChordController> {
         resetButton.active = control.option().changed();
         resetButton.extractRenderState(graphics, mouseX, mouseY, delta);
 
-        // Poll GLFW for releases each frame for the active capture, as vanilla does.
+        // Poll for releases each frame for the active capture, as vanilla does.
         if (capturing && capture != null) {
-            capture.pollReleases(Minecraft.getInstance().getWindow().handle());
+            capture.pollReleases();
         }
     }
 

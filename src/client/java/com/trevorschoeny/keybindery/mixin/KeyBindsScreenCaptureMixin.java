@@ -5,7 +5,6 @@ import com.trevorschoeny.keybindery.api.Chord;
 import com.trevorschoeny.keybindery.chord.ChordCapture;
 import com.trevorschoeny.keybindery.chord.IChordKeyMapping;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -144,8 +143,7 @@ public abstract class KeyBindsScreenCaptureMixin extends Screen {
                                           float partialTick, CallbackInfo ci) {
         ChordCapture active = ChordCapture.activeCapture;
         if (active != null && active.isCapturing()) {
-            long windowHandle = Minecraft.getInstance().getWindow().handle();
-            active.pollReleases(windowHandle);
+            active.pollReleases();
         }
     }
 }

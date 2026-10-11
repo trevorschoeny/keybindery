@@ -4,7 +4,6 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.trevorschoeny.keybindery.chord.ChordPressBuffer;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.input.KeyEvent;
-import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -22,7 +21,7 @@ import com.mojang.blaze3d.platform.InputConstants.Type;
  * pressing K still counts toward the chord.)
  *
  * <p>Mouse-button presses are not recorded here. Mouse buttons in a chord
- * work in the default mode (through a GLFW poll) but not in Simultaneous
+ * work in the default mode (through the held-button state) but not in Simultaneous
  * Mode. Supporting Simultaneous Mode with mouse buttons is left for later.
  */
 @Mixin(KeyboardHandler.class)
@@ -30,10 +29,10 @@ public abstract class KeyboardChordPressMixin {
 
     @Inject(method = "keyPress", at = @At("HEAD"))
     private void keybindery$recordPress(long window, int action, KeyEvent event, CallbackInfo ci) {
-        if (action != GLFW.GLFW_PRESS) return;
+        if (action != InputConstants.PRESS) return;
         int keyCode = event.key();
         if (keyCode == InputConstants.UNKNOWN.getValue()) return;
-        InputConstants.Key key = Type.KEYSYM.getOrCreate(keyCode);
+        InputConstants.Key key = Type.KEYBOARD.getOrCreate(keyCode);
         ChordPressBuffer.get().recordPress(key, System.currentTimeMillis());
     }
 }

@@ -5,7 +5,6 @@ import com.trevorschoeny.keybindery.api.Chord;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -38,7 +37,7 @@ import java.util.function.Consumer;
  */
 public class ChordCapture {
 
-    private static final long GLFW_FALLBACK_TIMEOUT_MS = 2000;
+    private static final long FALLBACK_TIMEOUT_MS = 2000;
 
     /**
      * The KeyMapping being captured, or null. Set by the controls-screen mixin
@@ -131,16 +130,16 @@ public class ChordCapture {
 
     /**
      * Safety net for the render loop: if no events arrive for 2 seconds or
-     * more, poll GLFW directly. Catches alt-tab and focus loss, where release
+     * more, poll the input state directly. Catches alt-tab and focus loss, where release
      * events get dropped.
      */
-    public void checkGLFWFallback(long windowHandle) {
+    public void checkPollFallback() {
         if (!capturing || highWaterMark.isEmpty()) return;
         long now = System.currentTimeMillis();
-        if ((now - lastEventTime) < GLFW_FALLBACK_TIMEOUT_MS) return;
+        if ((now - lastEventTime) < FALLBACK_TIMEOUT_MS) return;
         boolean anyHeld = false;
         for (InputConstants.Key key : highWaterMark) {
-            if (isKeyHeld(windowHandle, key)) { anyHeld = true; break; }
+            if (Chord.isKeyHeld(key)) { anyHeld = true; break; }
         }
         if (!anyHeld) { heldKeys.clear(); finalizeCapture(); }
     }
@@ -149,9 +148,9 @@ public class ChordCapture {
      * Polls for releases each frame, for vanilla's KeyBindsScreen, where mixin
      * methods can't reliably receive release events.
      */
-    public void pollReleases(long windowHandle) {
+    public void pollReleases() {
         if (!capturing || heldKeys.isEmpty()) return;
-        heldKeys.removeIf(key -> !isKeyHeld(windowHandle, key));
+        heldKeys.removeIf(key -> !Chord.isKeyHeld(key));
         if (heldKeys.isEmpty() && !highWaterMark.isEmpty()) finalizeCapture();
     }
 
@@ -191,10 +190,4 @@ public class ChordCapture {
         if (activeCapture == this) { activeMapping = null; activeCapture = null; }
     }
 
-    private static boolean isKeyHeld(long windowHandle, InputConstants.Key key) {
-        if (key.getType() == InputConstants.Type.MOUSE) {
-            return GLFW.glfwGetMouseButton(windowHandle, key.getValue()) == GLFW.GLFW_PRESS;
-        }
-        return GLFW.glfwGetKey(windowHandle, key.getValue()) == GLFW.GLFW_PRESS;
-    }
 }
