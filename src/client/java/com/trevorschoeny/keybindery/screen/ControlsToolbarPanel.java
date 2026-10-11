@@ -2,7 +2,6 @@ package com.trevorschoeny.keybindery.screen;
 
 import com.trevorschoeny.keybindery.api.Chord;
 import com.trevlar.menukit.api.element.Button;
-import com.trevlar.menukit.api.element.ControlStyle;
 import com.trevlar.menukit.api.element.Dropdown;
 import com.trevlar.menukit.api.panel.Panel;
 import com.trevlar.menukit.api.element.PanelElement;
@@ -110,7 +109,6 @@ public final class ControlsToolbarPanel {
                 .label(SortOrder::display)
                 .state(ControlsToolbarPanel::getSortOrder,
                        ControlsToolbarPanel::setSortOrder)
-                .style(ControlStyle.VANILLA)
                 .build();
 
         TextLabel filterLabel = TextLabel.builder()
@@ -126,7 +124,6 @@ public final class ControlsToolbarPanel {
                 .label(RowFilter::display)
                 .state(ControlsToolbarPanel::getRowFilter,
                        ControlsToolbarPanel::setRowFilter)
-                .style(ControlStyle.VANILLA)
                 .build();
 
         // Collapse All / Expand All — MK Button's label is fixed at
@@ -140,7 +137,6 @@ public final class ControlsToolbarPanel {
                     KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();
                     if (l != null) l.collapseAllGroups();
                 })
-                .style(ControlStyle.VANILLA)
                 .visibleWhen(() -> {
                     KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();
                     return l != null && l.getSortOrder() == SortOrder.BY_CATEGORY
@@ -155,7 +151,6 @@ public final class ControlsToolbarPanel {
                     KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();
                     if (l != null) l.expandAllGroups();
                 })
-                .style(ControlStyle.VANILLA)
                 .visibleWhen(() -> {
                     KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();
                     return l != null && l.getSortOrder() == SortOrder.BY_CATEGORY

@@ -41,9 +41,9 @@ import java.util.Objects;
  * {@code tooltip}, ...) plus {@link Builder#label}.
  *
  * <p>Layout, one row, 16px tall: {@code [label] [ chord ][⚠][↻]}. All three
- * buttons are plain MenuKit {@link Button}s in the default
- * {@code ControlStyle.MK}. They live in one element so a wrapping
- * {@code Flow} can never split them across lines.
+ * buttons are plain MenuKit {@link Button}s, styled MK's way everywhere
+ * except an options screen, which always draws them vanilla. They live in
+ * one element so a wrapping {@code Flow} can never split them across lines.
  *
  * <ul>
  *   <li><b>Key face</b>: fixed {@value #FACE_W}px so the row doesn't jump

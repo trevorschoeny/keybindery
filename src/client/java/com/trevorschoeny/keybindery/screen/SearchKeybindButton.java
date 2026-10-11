@@ -52,10 +52,11 @@ public class SearchKeybindButton extends AbstractPanelElement {
 
     private boolean isCapturing() { return capture != null && capture.isCapturing(); }
 
-    /** Vanilla button sprite atlas — matches the look of MK widgets that
-     *  opt into {@code ControlStyle.VANILLA} (the Sort/Filter dropdowns).
-     *  Capturing uses {@code widget/button_disabled} (vanilla's darker
-     *  uniform gray) to visually distinguish active-but-not-clickable. */
+    /** Vanilla button sprite atlas — matches the Sort/Filter dropdowns,
+     *  which draw vanilla here regardless of style since Controls is an
+     *  options screen. Capturing uses {@code widget/button_disabled}
+     *  (vanilla's darker uniform gray) to visually distinguish
+     *  active-but-not-clickable. */
     private static final Identifier SPRITE_NORMAL =
             Identifier.withDefaultNamespace("widget/button");
     private static final Identifier SPRITE_HIGHLIGHTED =
