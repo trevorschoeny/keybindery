@@ -1,18 +1,18 @@
 # Keybindery
 
-A chord-keybind library and controls-screen overhaul for Fabric. Bind multi-key combinations to any keymapping, vanilla or modded. Find and rebind a mod's keybinds from inside that mod's own config screen. Search, sort, and filter the controls screen.
+A chord-keybind library and a reworked Controls screen for Fabric. Bind multi-key combinations to any key mapping, vanilla or modded. Find and rebind a mod's keybinds from inside that mod's own config screen. Search, sort, and filter the controls screen.
 
 ## Features
 
 You can bind a combination like `Ctrl + Shift + K` or `X + Z` to any keybind in the game, vanilla or modded. Single-key bindings keep working as they did.
 
-Every mod's keybinds appear on a "Keybinds" tab in that mod's config screen if it uses YACL, or behind a small "Keybinds" button on other config screens, so you don't have to dig through the Key Binds menu for one mod's bindings.
+Every mod's keybinds show up in that mod's own config screen: on a "Keybinds" tab if it uses YACL, or behind a small "Keybinds" button otherwise. You don't have to dig through the Key Binds menu for one mod's bindings.
 
 The pause menu has a Keybinds button, next to the row of square buttons, that opens the Key Binds menu.
 
 The vanilla Key Binds menu gets a search box, a search-by-chord button, and sort and filter dropdowns along the top. Each row has a Conflicts icon, which jumps to the binds it clashes with, and a Reset icon. Long keybind names scroll.
 
-Keybindery installs on both client and server. On a server it does nothing by itself; it's there only because other mods that require it, like Inventory Plus and Inventory Max, load on servers too.
+Keybindery installs on both client and server. On a server it does nothing by itself. It's there only because mods that require it, like Inventory Plus and Inventory Max, load on servers too.
 
 ## Install
 
@@ -26,7 +26,7 @@ Requires:
 
 [YACL](https://modrinth.com/mod/yacl) 3.9.6 comes bundled, so there is no separate install.
 
-Recommended: [Mod Menu](https://modrinth.com/mod/modmenu). The auto-listed-mod-keybinds feature uses it to work out which keybinds belong to which mod.
+Recommended: [Mod Menu](https://modrinth.com/mod/modmenu). The per-mod keybind lists use it to work out which keybinds belong to which mod.
 
 ## Using it as a player
 
@@ -42,7 +42,7 @@ Press Escape in game. The Keybinds button is at the right end of the row of squa
 
 ### Find a mod's keybinds quickly
 
-Open any mod's config screen through Mod Menu. If the mod uses YACL, there is a "Keybinds" tab at the top. Otherwise look for a small "Keybinds" button in the top-right corner of the config screen. Clicking it opens the controls screen filtered to that mod's keybinds.
+Open any mod's config screen through Mod Menu. If the mod uses YACL, there's a "Keybinds" tab at the top. Otherwise look for a small "Keybinds" button in the top-right corner. Clicking it opens the controls screen filtered to that mod's keybinds.
 
 ### Search and filter the controls screen
 
@@ -88,7 +88,7 @@ ConfigCategory keybindsCategory = ConfigCategory.createBuilder()
         .build();
 ```
 
-That one call adds the label, chord button, Conflicts icon, and Reset icon to the category. The mapping is marked as claimed, so Keybindery's auto-list won't duplicate it on a fallback Keybinds tab.
+That one call adds the label, chord button, Conflicts icon, and Reset icon to the category. It also marks the mapping as claimed, so Keybindery won't list it a second time on a fallback Keybinds tab.
 
 ### Mark a keybind as surfaced in your own UI
 
@@ -102,13 +102,13 @@ You can call it more than once.
 
 ### Stub behavior
 
-`keybindery-api` is a separate jar with no runtime dependency on Keybindery. If a player runs without Keybindery installed, every API call falls through to a no-op stub: chords read as `UNBOUND`, writes do nothing, and `createYACLChordOption` returns a single disabled "Keybindery not installed" label. Your mod's UI still renders.
+`keybindery-api` is a separate jar with no runtime dependency on Keybindery. If a player doesn't have Keybindery installed, every API call goes to a stub that does nothing: chords read as `UNBOUND`, writes do nothing, and `createYACLChordOption` returns a single disabled "Keybindery not installed" label. Your mod's UI still renders.
 
 ## Compatibility
 
 Vanilla single-key bindings keep working. Mods that don't opt into chords behave exactly as before.
 
-Keybindery changes `KeyMapping` through narrow mixin injections and never overwrites a vanilla method, so other mods that touch the same code still run. This is how it coexists with input mods such as Controlify.
+Keybindery changes `KeyMapping` through narrow mixin injections and never overwrites a vanilla method, so other mods that touch the same code still run. That's how it works alongside input mods such as Controlify.
 
 Cross-mod conflict detection uses one rule: any shared key counts. A mod that defaults a keybind to `S` is flagged as conflicting with vanilla's walk-back `S`. The only overlap not flagged is vanilla against vanilla, since Mojang designed those defaults to coexist.
 
