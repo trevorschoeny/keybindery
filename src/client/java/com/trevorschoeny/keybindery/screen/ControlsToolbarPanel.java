@@ -74,7 +74,7 @@ public final class ControlsToolbarPanel {
         // Row 1.
         SearchBox searchBox = new SearchBox(
                 SEARCH_X, ROW1_Y, SEARCH_W, ELEM_H,
-                Component.literal("Search keybinds..."),
+                Component.literal("Search by name…"),
                 query -> {
                     KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();
                     if (l != null) l.setSearchQuery(query);
@@ -91,7 +91,7 @@ public final class ControlsToolbarPanel {
                 CHORD_BTN_X, ROW1_Y, CHORD_BTN_W, ELEM_H,
                 ControlsToolbarPanel::getSearchChord,
                 ControlsToolbarPanel::setSearchChord,
-                Component.literal("Search Keybind..."),
+                Component.literal("Search by keys"),
                 Component.literal("Click to bind a chord; right-click to clear."));
 
         // Row 2. The labels are vertically centered against the dropdowns in
