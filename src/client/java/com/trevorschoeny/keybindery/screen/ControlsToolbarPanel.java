@@ -46,12 +46,6 @@ public final class ControlsToolbarPanel {
     /** Shared height of the search box, chord button and dropdowns. */
     private static final int ELEM_H = 20;
 
-    // Row 1 widths and x positions.
-    private static final int SEARCH_W = 140;
-    private static final int CHORD_BTN_W = 110;
-    private static final int SEARCH_X = 0;
-    private static final int CHORD_BTN_X = SEARCH_X + SEARCH_W + 4;
-
     // Row 2 widths and x positions.
     private static final int SORT_W = 90;
     private static final int FILTER_W = 90;
@@ -68,6 +62,14 @@ public final class ControlsToolbarPanel {
 
     /** Total outer width. Row 2 is the wider row, with the collapse button after the filter dropdown. */
     static final int PANEL_WIDTH = COLLAPSE_X + COLLAPSE_W;
+
+    // Row 1 widths and x positions: the search box and the chord button split
+    // row 2's full width evenly, with a 4px gap, so both rows end flush.
+    private static final int ROW1_GAP = 4;
+    private static final int SEARCH_W = (PANEL_WIDTH - ROW1_GAP) / 2;
+    private static final int CHORD_BTN_W = PANEL_WIDTH - ROW1_GAP - SEARCH_W;
+    private static final int SEARCH_X = 0;
+    private static final int CHORD_BTN_X = SEARCH_X + SEARCH_W + ROW1_GAP;
 
     /** Builds the panel and adapter and registers them with MenuKit. Call once at client init. */
     public static void install() {
