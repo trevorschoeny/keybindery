@@ -4,15 +4,17 @@ A chord-keybind library and a reworked Controls screen for Fabric. Bind multi-ke
 
 ## Features
 
-You can bind a combination like `Ctrl + Shift + K` or `X + Z` to any keybind in the game, vanilla or modded. Single-key bindings keep working as they did.
+**Chord keybinds.** You can bind a combination like `Ctrl + Shift + K` or `X + Z` to any keybind in the game, vanilla or modded. Single-key bindings keep working as they did.
 
-Every mod's keybinds show up in that mod's own config screen: on a "Keybinds" tab if it uses YACL, or behind a small "Keybinds" button otherwise. You don't have to dig through the Key Binds menu for one mod's bindings.
+**Simultaneous Mode.** Normally a chord fires while all its keys are held down. Turn on Simultaneous Mode and the keys also have to go down together, within a window you set between 50 and 500 milliseconds (100 by default). Holding Ctrl for a while and then tapping K stops counting as `Ctrl + K`. It's off by default. Turn it on in Keybindery's settings, or bind a key to switch it on and off.
 
-The pause menu has a Keybinds button, next to the row of square buttons, that opens the Key Binds menu.
+**Keybinds in each mod's config.** Every mod's keybinds show up in that mod's own config screen: on a "Keybinds" tab if it uses YACL, or behind a small "Keybinds" button otherwise. You don't have to dig through the Key Binds menu for one mod's bindings.
 
-The vanilla Key Binds menu gets a search box, a search-by-chord button, and sort and filter dropdowns along the top. Each row has a Conflicts icon, which jumps to the binds it clashes with, and a Reset icon. Long keybind names scroll.
+**Keybinds button in the pause menu.** The pause menu has a Keybinds button, next to the row of square buttons, that opens the Key Binds menu.
 
-Keybindery installs on both client and server. On a server it does nothing by itself. It's there only because mods that require it, like Inventory Plus and Inventory Max, load on servers too.
+**A better Key Binds menu.** The vanilla Key Binds menu gets a search box, a search-by-chord button, and sort and filter dropdowns along the top. Each row has a Conflicts icon, which jumps to the binds it clashes with, and a Reset icon. Long keybind names scroll.
+
+**On servers.** Keybindery installs on both client and server. On a server it does nothing by itself. It's there only because mods that require it, like Inventory Plus and Inventory Max, load on servers too.
 
 ## Install
 
@@ -35,6 +37,10 @@ Recommended: [Mod Menu](https://modrinth.com/mod/modmenu). The per-mod keybind l
 Open the Key Binds menu (Options, Controls, Key Binds). Click any row's chord button and press the chord you want: hold all the keys together, then release. The chord saves.
 
 To clear a binding, right-click the chord button during normal browsing, or press Delete or Backspace mid-capture. Press Escape mid-capture to cancel without changing anything.
+
+### Turn on Simultaneous Mode
+
+Open Keybindery's settings through Mod Menu and turn on Simultaneous Mode. A Simultaneous Window setting appears under it: larger is more forgiving about how close together you press the keys, smaller is stricter. To switch the mode on the fly, bind the Simultaneous Mode key in the Keybindery section of Controls. Each press flips it and shows the new state above your hotbar.
 
 ### Open your keybinds from the pause menu
 
