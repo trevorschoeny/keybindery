@@ -4,17 +4,17 @@ A chord-keybind library and a reworked Controls screen for Fabric. Bind multi-ke
 
 ## Features
 
+**Keybinds button in the pause menu.** The pause menu has a Keybinds button, next to the row of square buttons, that opens the Key Binds menu.
+
+**A better Key Binds menu.** The vanilla Key Binds menu gets a search box, a search-by-chord button, and sort and filter dropdowns along the top. Each row has a Conflicts icon, which jumps to the binds it clashes with, and a Reset icon. Long keybind names scroll.
+
 **Chord keybinds.** You can bind a combination like `Ctrl + Shift + K` or `X + Z` to any keybind in the game, vanilla or modded. Single-key bindings keep working as they did.
 
 **Simultaneous Mode.** Normally a chord fires while all its keys are held down. Turn on Simultaneous Mode and the keys also have to go down together, within a window you set between 50 and 500 milliseconds (100 by default). Holding Ctrl for a while and then tapping K stops counting as `Ctrl + K`. It's off by default. Turn it on in Keybindery's settings, or bind a key to switch it on and off.
 
-**Keybinds in each mod's config.** Every mod's keybinds show up in that mod's own config screen: on a "Keybinds" tab if it uses YACL, or behind a small "Keybinds" button otherwise. You don't have to dig through the Key Binds menu for one mod's bindings.
+**Keybinds in each mod's config.** Every mod's keybinds show up in that mod's own config screen: on a "Keybinds" tab if it uses YACL, or behind a small "Keybinds" button otherwise. This works for any mod listed in Mod Menu. You don't have to dig through the Key Binds menu for one mod's bindings.
 
-**Keybind capture for other mods.** A mod can build Keybindery's keybind capture straight into its own settings. In a YACL config, one call adds a full keybind row with the chord button, Conflicts icon and Reset icon. A mod with its own custom settings screen can read and set chords through the API and draw the rows itself. See Using it as a mod developer below.
-
-**Keybinds button in the pause menu.** The pause menu has a Keybinds button, next to the row of square buttons, that opens the Key Binds menu.
-
-**A better Key Binds menu.** The vanilla Key Binds menu gets a search box, a search-by-chord button, and sort and filter dropdowns along the top. Each row has a Conflicts icon, which jumps to the binds it clashes with, and a Reset icon. Long keybind names scroll.
+**An API for other mods.** Through Keybindery's API, a mod can build keybind capture straight into its own settings. In a YACL config, one call adds a full keybind row with the chord button, Conflicts icon and Reset icon. A mod with its own custom settings screen can read and set chords directly and draw the rows itself. See Using it as a mod developer below.
 
 **On servers.** Keybindery installs on both client and server. On a server it does nothing by itself. It's there only because mods that require it, like Inventory Plus and Inventory Max, load on servers too.
 
