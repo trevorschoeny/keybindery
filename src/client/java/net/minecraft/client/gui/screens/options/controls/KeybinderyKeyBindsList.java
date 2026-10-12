@@ -37,8 +37,6 @@ import java.util.Set;
  */
 public class KeybinderyKeyBindsList extends KeyBindsList {
 
-    private static final String MISC_CATEGORY_LABEL_KEY = "key.categories.misc";
-
     private String searchQuery = "";
     private SortOrder sortOrder = SortOrder.BY_CATEGORY;
     private RowFilter rowFilter = RowFilter.NONE;
@@ -264,15 +262,10 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
     }
 
     private static boolean isMiscCategory(KeyMapping.Category category) {
-        // Vanilla's MISC category label uses the lang key "key.categories.misc".
-        // It translates to "Miscellaneous" in en_us, but the Component's
-        // .toString() sometimes contains the key form too, so compare the raw
-        // label key.
-        Component label = category.label();
-        if (label.getContents() instanceof net.minecraft.network.chat.contents.TranslatableContents tc) {
-            return MISC_CATEGORY_LABEL_KEY.equals(tc.getKey());
-        }
-        return false;
+        // Compare against vanilla's own MISC category object directly, rather
+        // than its lang key: 26.x's label key changed under us once already,
+        // and the category itself is the stable thing mods actually share.
+        return KeyMapping.Category.MISC.equals(category);
     }
 
     /**
