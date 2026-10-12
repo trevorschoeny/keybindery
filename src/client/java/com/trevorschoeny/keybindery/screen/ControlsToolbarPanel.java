@@ -93,7 +93,7 @@ public final class ControlsToolbarPanel {
                 CHORD_BTN_X, ROW1_Y, CHORD_BTN_W, ELEM_H,
                 ControlsToolbarPanel::getSearchChord,
                 ControlsToolbarPanel::setSearchChord,
-                Component.literal("Search by keys"),
+                Component.literal("Search by key chord"),
                 Component.literal("Click to bind a chord; right-click to clear."));
 
         // Row 2. The labels are vertically centered against the dropdowns in
