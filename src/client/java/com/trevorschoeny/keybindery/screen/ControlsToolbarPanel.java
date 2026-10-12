@@ -76,7 +76,7 @@ public final class ControlsToolbarPanel {
         // Row 1.
         SearchBox searchBox = new SearchBox(
                 SEARCH_X, ROW1_Y, SEARCH_W, ELEM_H,
-                Component.literal("Search by name or mod…"),
+                Component.literal("Search by name…"),
                 query -> {
                     KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();
                     if (l != null) l.setSearchQuery(query);
