@@ -1,7 +1,5 @@
 package com.trevorschoeny.keybindery.config;
 
-import com.trevorschoeny.keybindery.KeybinderyClient;
-import com.trevorschoeny.keybindery.api.KeybinderyAPI;
 import dev.isxander.yacl3.api.ConfigCategory;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.OptionDescription;
@@ -71,20 +69,6 @@ public final class KeybinderyConfigScreen {
         // mode flips, a YACL listener updates the window option's availability.
         simultaneousOpt.addListener((opt, newValue) -> windowOpt.setAvailable(newValue));
 
-        // Demo entry: uses the in-config keybind API to render a chord row. It
-        // has its own category so it reads as a developer demo, apart from the
-        // player-facing Chord Detection settings.
-        java.util.Collection<? extends Option<?>> f1DemoChord = KeybinderyAPI.getInstance().createYACLChordOption(
-                KeybinderyClient.F1_DEMO_CHORD,
-                Component.literal("F1 Demo Chord"),
-                OptionDescription.of(Component.literal(
-                        "Click to bind a multi-key chord using Keybindery's F1 " +
-                        "API. The same widget consumer mods get by calling " +
-                        "KeybinderyAPI.getInstance().createYACLChordOption(...).\n\n" +
-                        "When the chord fires in-game, Keybindery logs " +
-                        "\"F1 demo chord fired!\", watch the launcher log " +
-                        "to see it in action.")));
-
         Option<Boolean> disableControlsReplacement = Option.<Boolean>createBuilder()
                 .name(Component.literal("Disable controls-screen replacement"))
                 .description(OptionDescription.of(Component.literal(
@@ -110,10 +94,6 @@ public final class KeybinderyConfigScreen {
                 .category(ConfigCategory.createBuilder()
                         .name(Component.literal("Controls Screen"))
                         .option(disableControlsReplacement)
-                        .build())
-                .category(ConfigCategory.createBuilder()
-                        .name(Component.literal("F1 Demo"))
-                        .options(f1DemoChord)
                         .build())
                 .save(KeybinderyConfig::save)
                 .build()

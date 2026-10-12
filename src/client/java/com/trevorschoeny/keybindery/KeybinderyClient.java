@@ -39,17 +39,6 @@ public class KeybinderyClient implements ClientModInitializer {
     /** The Simultaneous Mode toggle keybind. Unbound by default, so players opt in. */
     public static KeyMapping SIMULTANEOUS_MODE_TOGGLE;
 
-    /**
-     * Demo keybind for the in-config keybind API. Bindable from Keybindery's own
-     * YACL config screen via
-     * {@link com.trevorschoeny.keybindery.api.KeybinderyAPI#createYACLChordOption}.
-     * Shows the API working end to end: a YACL chord row that captures and
-     * applies a multi-key chord. Logs each time the chord fires so the player
-     * sees feedback. (Real consumer mods register their own keybinds and use the
-     * API the same way; this one is only a live demo inside Keybindery itself.)
-     */
-    public static KeyMapping F1_DEMO_CHORD;
-
     @Override
     public void onInitializeClient() {
         KeybinderyConfig.load();
@@ -63,13 +52,6 @@ public class KeybinderyClient implements ClientModInitializer {
 
         SIMULTANEOUS_MODE_TOGGLE = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.keybindery.toggle_simultaneous_mode",
-                InputConstants.Type.KEYBOARD,
-                InputConstants.UNKNOWN.getValue(),
-                CATEGORY
-        ));
-
-        F1_DEMO_CHORD = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                "key.keybindery.f1_demo_chord",
                 InputConstants.Type.KEYBOARD,
                 InputConstants.UNKNOWN.getValue(),
                 CATEGORY
@@ -112,16 +94,6 @@ public class KeybinderyClient implements ClientModInitializer {
                 if (client.player != null) {
                     client.player.sendOverlayMessage(Component.literal(
                             "[Keybindery] Simultaneous Mode: " + (cfg.simultaneousMode ? "ON" : "OFF")));
-                }
-            }
-            // Demo chord: log and show an action-bar message each time it
-            // fires, so the player can see dispatch working without opening
-            // the launcher log.
-            while (F1_DEMO_CHORD.consumeClick()) {
-                LOGGER.info("[Keybindery] F1 demo chord fired!");
-                if (client.player != null) {
-                    client.player.sendOverlayMessage(Component.literal(
-                            "[Keybindery] F1 demo chord fired!"));
                 }
             }
         });
