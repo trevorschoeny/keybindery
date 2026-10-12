@@ -10,7 +10,7 @@ A chord-keybind library and a reworked Controls screen for Fabric. Bind multi-ke
 
 **Keybinds in each mod's config.** Every mod's keybinds show up in that mod's own config screen: on a "Keybinds" tab if it uses YACL, or behind a small "Keybinds" button otherwise. You don't have to dig through the Key Binds menu for one mod's bindings.
 
-**Keybind capture for other mods.** A mod can build Keybindery's keybind capture straight into its own settings. In a YACL config, one call adds a full keybind row with the chord button, Conflicts icon and Reset icon. A mod with its own custom settings screen can read and set chords through the API and draw the rows itself. See [Using it as a mod developer](#using-it-as-a-mod-developer) below.
+**Keybind capture for other mods.** A mod can build Keybindery's keybind capture straight into its own settings. In a YACL config, one call adds a full keybind row with the chord button, Conflicts icon and Reset icon. A mod with its own custom settings screen can read and set chords through the API and draw the rows itself. See Using it as a mod developer below.
 
 **Keybinds button in the pause menu.** The pause menu has a Keybinds button, next to the row of square buttons, that opens the Key Binds menu.
 
