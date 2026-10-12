@@ -9,7 +9,7 @@ import net.minecraft.network.chat.Component;
 public enum SortOrder {
     BY_CATEGORY("Category"),
     ALPHABETICAL("Alphabetical"),
-    BY_KEY("Keybind Assignment");
+    BY_KEY("Key Chord");
 
     private final String displayName;
 
