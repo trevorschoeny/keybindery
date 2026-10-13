@@ -30,17 +30,18 @@ Through Keybindery's API, a mod can build keybind capture straight into its own 
 
 ### On servers
 
-Keybindery installs on both client and server. On a server it does nothing by itself. It's there only because mods that require it, like Inventory Plus and Inventory Max, load on servers too.
+Keybindery installs on both client and server. On a server it does nothing by itself. It's there only because mods that require it, like Inventory Plus, load on servers too.
 
 ## Install
 
 Drop the jar in your `mods/` folder along with Fabric API. YACL is bundled inside the jar.
 
 Requires:
+
 - Minecraft 26.3 (this build)
 - Fabric Loader 0.19.5 or newer
 - Fabric API
-- MenuKit 6.2.0 or newer, below 7.0.0
+- MenuKit 7.0.0 or newer, below 8.0.0
 
 [YACL](https://modrinth.com/mod/yacl) 3.9.7 comes bundled, so there is no separate install.
 
