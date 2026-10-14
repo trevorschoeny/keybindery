@@ -3,11 +3,14 @@ package com.trevorschoeny.keybindery.api;
 import com.trevorschoeny.keybindery.chord.ChordController;
 import com.trevorschoeny.keybindery.chord.ClaimRegistry;
 import com.trevorschoeny.keybindery.chord.IChordKeyMapping;
+import com.trevorschoeny.keybindery.screen.KeybinderyKeyBindsScreen;
+import com.trevorschoeny.keybindery.screen.ModConfigKeybindsRegistry;
 import dev.isxander.yacl3.api.LabelOption;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.OptionDescription;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.ApiStatus;
 
@@ -84,5 +87,15 @@ public final class KeybinderyAPIImpl implements KeybinderyAPI {
     @Override
     public boolean isHeld(KeyMapping mapping) {
         return getChord(mapping).isActiveHeld();
+    }
+
+    @Override
+    public void openModKeybinds(String modId, Screen current) {
+        KeybinderyKeyBindsScreen.openWithModFilterFor(modId, current);
+    }
+
+    @Override
+    public boolean hasKeybinds(String modId) {
+        return !ModConfigKeybindsRegistry.keybindsFor(modId).isEmpty();
     }
 }
