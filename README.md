@@ -41,7 +41,7 @@ Requires:
 - Minecraft 26.3 (this build)
 - Fabric Loader 0.19.5 or newer
 - Fabric API
-- MenuKit 7.0.0 or newer, below 8.0.0
+- MenuKit 7.1.0 or newer, below 8.0.0
 
 [YACL](https://modrinth.com/mod/yacl) 3.9.7 comes bundled, so there is no separate install.
 
@@ -71,7 +71,7 @@ Open any mod's config screen through Mod Menu. If the mod uses YACL, there's a "
 
 At the top of the Key Binds menu:
 
-- Search by name: type a name to narrow the list.
+- Search by name: type a keybind's name or its category to narrow the list. Separate terms with `|` to show keybinds that match any of them, as in `Inventory Plus | Hotbar Pockets`.
 - Search by key chord: click and press any chord. The list shows every keybind that shares a key with that chord, which is the quickest way to find conflicts.
 - Sort: by category (default), alphabetical, or by key chord.
 - Filter: only conflicting binds, only unbound binds, or no filter.
@@ -123,9 +123,21 @@ KeybinderyAPI.getInstance().markClaimed(myKey);
 
 You can call it more than once.
 
+### Open the Key Binds menu for a mod
+
+```java
+KeybinderyAPI api = KeybinderyAPI.getInstance();
+if (api.hasKeybinds("mymod")) {
+    api.openModKeybinds("mymod", currentScreen);                 // one mod
+    api.openModKeybinds(List.of("mymod", "myaddon"), currentScreen); // several at once
+}
+```
+
+The menu opens over `currentScreen` with the search box already filled in, so the player can see the filter and clear it.
+
 ### Stub behavior
 
-`keybindery-api` is a separate jar with no runtime dependency on Keybindery. If a player doesn't have Keybindery installed, every API call goes to a stub that does nothing: chords read as `UNBOUND`, writes do nothing, and `createYACLChordOption` returns a single disabled "Keybindery not installed" label. Your mod's UI still renders.
+`keybindery-api` is a separate jar with no runtime dependency on Keybindery. If a player doesn't have Keybindery installed, every API call goes to a stub that does nothing: chords read as `UNBOUND`, writes do nothing, `createYACLChordOption` returns a single disabled "Keybindery not installed" label, `hasKeybinds` returns false, and `openModKeybinds` does nothing. Your mod's UI still renders.
 
 ## Compatibility
 
