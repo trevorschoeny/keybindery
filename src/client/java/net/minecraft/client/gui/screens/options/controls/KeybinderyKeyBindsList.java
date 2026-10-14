@@ -171,12 +171,19 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
     }
 
     private boolean passesFilter(KeyMapping km) {
-        // Search by name and category label. Searching by chord is handled
-        // separately, by searchChordKeys.
-        if (!searchQuery.isEmpty()) {
+        // Search by name and category label. " | " separates alternatives:
+        // a row passes if any term matches, which is how one search shows
+        // several mods' categories at once (openWithModFilterFor). Searching
+        // by chord is handled separately, by searchChordKeys.
+        if (!searchQuery.isBlank()) {
             String name = Component.translatable(km.getName()).getString().toLowerCase();
             String category = km.getCategory().label().getString().toLowerCase();
-            if (!name.contains(searchQuery) && !category.contains(searchQuery)) return false;
+            boolean any = false;
+            for (String term : searchQuery.split("\\|")) {
+                term = term.trim();
+                if (!term.isEmpty() && (name.contains(term) || category.contains(term))) { any = true; break; }
+            }
+            if (!any) return false;
         }
         // Single-choice row filter: None, Conflicts or Not Bound.
         switch (rowFilter) {

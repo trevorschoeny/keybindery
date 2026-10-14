@@ -176,17 +176,33 @@ public class KeybinderyKeyBindsScreen extends KeyBindsScreen {
      * even though no rows will match.
      */
     public static void openWithModFilterFor(String modId, Screen current) {
-        List<KeyMapping> mappings =
-                com.trevorschoeny.keybindery.screen.ModConfigKeybindsRegistry.keybindsFor(modId);
-        String query;
-        if (!mappings.isEmpty()) {
-            query = mappings.get(0).getCategory().label().getString();
-        } else {
-            query = FabricLoader.getInstance().getModContainer(modId)
-                    .map(c -> c.getMetadata().getName())
-                    .orElse(modId);
+        openWithModFilterFor(List.of(modId), current);
+    }
+
+    /**
+     * Opens the controls screen showing every one of {@code modIds}' keybinds
+     * together. The search box is filled with their category labels joined
+     * by " | " (the list's any-of separator), so the player can see what the
+     * filter is and edit or clear it like any search. When none of the mods
+     * has keybinds, the mods' names are searched instead, which shows an
+     * empty list naming what was asked for.
+     */
+    public static void openWithModFilterFor(java.util.Collection<String> modIds, Screen current) {
+        // LinkedHashSet: keeps the caller's order and drops a category two mods share.
+        Set<String> terms = new LinkedHashSet<>();
+        for (String modId : modIds) {
+            for (KeyMapping km : ModConfigKeybindsRegistry.keybindsFor(modId)) {
+                terms.add(km.getCategory().label().getString());
+            }
         }
-        pendingSearchQuery = query;
+        if (terms.isEmpty()) {
+            for (String modId : modIds) {
+                terms.add(FabricLoader.getInstance().getModContainer(modId)
+                        .map(c -> c.getMetadata().getName())
+                        .orElse(modId));
+            }
+        }
+        pendingSearchQuery = String.join(" | ", terms);
         Minecraft mc = Minecraft.getInstance();
         mc.gui.setScreen(new KeybinderyKeyBindsScreen(current, mc.options));
     }

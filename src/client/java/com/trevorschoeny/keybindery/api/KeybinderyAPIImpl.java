@@ -95,6 +95,11 @@ public final class KeybinderyAPIImpl implements KeybinderyAPI {
     }
 
     @Override
+    public void openModKeybinds(java.util.Collection<String> modIds, Screen current) {
+        KeybinderyKeyBindsScreen.openWithModFilterFor(modIds, current);
+    }
+
+    @Override
     public boolean hasKeybinds(String modId) {
         return !ModConfigKeybindsRegistry.keybindsFor(modId).isEmpty();
     }
