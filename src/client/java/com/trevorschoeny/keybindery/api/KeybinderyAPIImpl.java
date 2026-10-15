@@ -1,8 +1,10 @@
 package com.trevorschoeny.keybindery.api;
 
+import com.trevorschoeny.keybindery.chord.ChordCaptureWidget;
 import com.trevorschoeny.keybindery.chord.ChordController;
 import com.trevorschoeny.keybindery.chord.ClaimRegistry;
 import com.trevorschoeny.keybindery.chord.IChordKeyMapping;
+import com.trevorschoeny.keybindery.chord.RuntimeBindingRegistry;
 import com.trevorschoeny.keybindery.screen.KeybinderyKeyBindsScreen;
 import com.trevorschoeny.keybindery.screen.ModConfigKeybindsRegistry;
 import dev.isxander.yacl3.api.LabelOption;
@@ -10,12 +12,14 @@ import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.OptionDescription;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * The real {@link KeybinderyAPI} implementation, registered by Keybindery at
@@ -102,5 +106,16 @@ public final class KeybinderyAPIImpl implements KeybinderyAPI {
     @Override
     public boolean hasKeybinds(String modId) {
         return !ModConfigKeybindsRegistry.keybindsFor(modId).isEmpty();
+    }
+
+    @Override
+    public RuntimeBindings bindings() {
+        return RuntimeBindingRegistry.INSTANCE;
+    }
+
+    @Override
+    public AbstractWidget captureWidget(int x, int y, int width, int height,
+                                        Chord chord, Consumer<Chord> onChange) {
+        return new ChordCaptureWidget(x, y, width, height, chord, onChange);
     }
 }

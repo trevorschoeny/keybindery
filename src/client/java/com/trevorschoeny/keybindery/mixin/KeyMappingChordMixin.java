@@ -5,6 +5,7 @@ import com.trevorschoeny.keybindery.api.Chord;
 import com.trevorschoeny.keybindery.chord.ChordCapture;
 import com.trevorschoeny.keybindery.chord.ChordPressBuffer;
 import com.trevorschoeny.keybindery.chord.IChordKeyMapping;
+import com.trevorschoeny.keybindery.chord.RuntimeBindingRegistry;
 import com.trevorschoeny.keybindery.config.KeybinderyConfig;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -92,6 +93,9 @@ public abstract class KeyMappingChordMixin implements IChordKeyMapping {
 
     @Inject(method = "click", at = @At("TAIL"))
     private static void keybindery$onClickTail(InputConstants.Key key, CallbackInfo ci) {
+        // Runtime bindings (KeybinderyAPI.bindings()) fire on the same presses
+        // vanilla hands to key mappings.
+        RuntimeBindingRegistry.INSTANCE.onClick(key);
         Map<InputConstants.Key, List<KeyMapping>> map = KeyMappingAccessor.keybindery$getMap();
         List<KeyMapping> mappings = map.get(key);
         if (mappings == null) return;

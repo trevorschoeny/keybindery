@@ -17,7 +17,8 @@
     "OptionsChordPersistenceMixin",
     "OptionsSubScreenAccessor",
     "PauseScreenKeysButtonMixin",
-    "MouseButtonStateMixin"
+    "MouseButtonStateMixin",
+    "ScreenChordCaptureMixin"
   ],
   "injectors": {
     "defaultRequire": 1
