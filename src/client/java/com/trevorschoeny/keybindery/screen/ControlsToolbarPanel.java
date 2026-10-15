@@ -8,6 +8,7 @@ import com.trevlar.menukit.api.element.PanelElement;
 import com.trevlar.menukit.api.panel.PanelPosition;
 import com.trevlar.menukit.api.panel.PanelStyle;
 import com.trevlar.menukit.api.panel.InsideRegion;
+import com.trevlar.menukit.api.element.TextField;
 import com.trevlar.menukit.api.element.TextLabel;
 import com.trevlar.menukit.api.panel.VanillaScreenPanelAdapter;
 import net.minecraft.network.chat.Component;
@@ -73,21 +74,24 @@ public final class ControlsToolbarPanel {
 
     /** Builds the panel and adapter and registers them with MenuKit. Call once at client init. */
     public static void install() {
-        // Row 1.
-        SearchBox searchBox = new SearchBox(
-                SEARCH_X, ROW1_Y, SEARCH_W, ELEM_H,
-                Component.literal("Search by name…"),
-                query -> {
-                    KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();
-                    if (l != null) l.setSearchQuery(query);
-                },
-                // Fill the field from the list's current searchQuery on every
-                // screen attach. This lets openWithModFilterFor pre-fill the box,
-                // and the player can backspace it to see all keybinds.
-                () -> {
-                    KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();
-                    return l != null ? l.getSearchQuery() : "";
-                });
+        // Row 1. MenuKit's TextField (7.2.0+) hosts the vanilla EditBox itself,
+        // so this no longer hand-rolls focus and placement the way the old
+        // SearchBox did. state(get, set) is a live lens: get is read every
+        // frame, so openWithModFilterFor's pre-fill and the player's own
+        // typing both show through the one field.
+        TextField searchBox = TextField.builder()
+                .at(SEARCH_X, ROW1_Y).size(SEARCH_W, ELEM_H)
+                .hint(Component.literal("Search by name…"))
+                .state(
+                        () -> {
+                            KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();
+                            return l != null ? l.getSearchQuery() : "";
+                        },
+                        query -> {
+                            KeybinderyKeyBindsList l = KeybinderyKeyBindsScreen.currentList();
+                            if (l != null) l.setSearchQuery(query);
+                        })
+                .build();
 
         SearchKeybindButton chordBtn = new SearchKeybindButton(
                 CHORD_BTN_X, ROW1_Y, CHORD_BTN_W, ELEM_H,
