@@ -66,11 +66,7 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
     public void setSearchQuery(String query) {
         if (query == null) query = "";
         if (this.searchQuery.equals(query)) return;
-        // Stored as typed, not lowercased: TextField's lens (MenuKit 7.2.0) reads
-        // this every frame to redraw the field, so lowercasing here would rewrite
-        // the player's capitals out from under them as they type. Matching below
-        // lowercases at comparison time instead.
-        this.searchQuery = query;
+        this.searchQuery = query.toLowerCase();
         refreshAndScrollToTop();
     }
 
@@ -183,7 +179,7 @@ public class KeybinderyKeyBindsList extends KeyBindsList {
             String name = Component.translatable(km.getName()).getString().toLowerCase();
             String category = km.getCategory().label().getString().toLowerCase();
             boolean any = false;
-            for (String term : searchQuery.toLowerCase().split("\\|")) {
+            for (String term : searchQuery.split("\\|")) {
                 term = term.trim();
                 if (!term.isEmpty() && (name.contains(term) || category.contains(term))) { any = true; break; }
             }
