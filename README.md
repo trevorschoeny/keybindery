@@ -1,107 +1,148 @@
 # Keybindery
 
-A chord-keybind library and a reworked Controls screen for Fabric. Bind multi-key combinations to any key mapping, vanilla or modded. Find and rebind a mod's keybinds from inside that mod's own config screen. Search, sort, and filter the controls screen.
+Keybindery lets any keybind in the game use a combination of keys, and makes your keybinds easier to find and change. You can bind `Ctrl + Shift + K` or `X + Z` to any action, vanilla or modded, search and filter the Key Binds menu, and edit a mod's keybinds from inside that mod's own settings.
+
+I also built it as a library, so my other mods can put keybind buttons in their own settings screens, and other modders can do the same.
+
+It runs on the client. You can also install it on a server, where it does nothing by itself, so that mods that require it, like Inventory Plus, can load there too.
 
 ## Features
 
-### Keybinds button in the pause menu
+### Chord keybinds
 
-The pause menu has a Keybinds button, next to the row of square buttons, that opens the Key Binds menu.
+- Bind a combination like `Ctrl + Shift + K` or `X + Z` to any keybind, vanilla or modded. Mouse buttons can be part of a chord too.
+- Single-key keybinds keep working as they did.
+- Simultaneous Mode, which is off by default, makes the keys of a chord go down together within a short window you set.
 
 ### A better Key Binds menu
 
-The vanilla Key Binds menu gets a search box, a search-by-chord button, and sort and filter dropdowns along the top. Each row has a Conflicts icon, which jumps to the binds it clashes with, and a Reset icon. Long keybind names scroll.
+- A search box, a Search by key chord button, and Sort and Filter dropdowns sit along the top.
+- Each row has a Conflicts icon that shows every keybind sharing a key with it, and a Reset icon.
+- Categories fold up with a click, and keybinds that vanilla would put under Miscellaneous are grouped by the mod they come from.
 
-### Chord keybinds
+### Keybinds button in the pause menu
 
-You can bind a combination like `Ctrl + Shift + K` or `X + Z` to any keybind in the game, vanilla or modded. Single-key bindings keep working as they did.
+- A small button at the end of the pause menu's row of icon buttons opens the Key Binds menu.
+
+### Keybinds in each mod's settings
+
+- A mod with a YACL config screen gets a Keybinds tab that lists its keybinds.
+- Other config screens opened from Mod Menu get a Keybinds button that opens the Key Binds menu filtered to that mod.
+
+### Keybinds inside other mods
+
+- Mods built on Keybindery can put chord keybind buttons right in their own settings. Inventory Plus shows its keybinds next to the settings they belong to, and Sandboxes gives each sandbox its own key.
+
+## Requirements
+
+- [Fabric API](https://modrinth.com/mod/fabric-api), for registering keybinds and hooking into the game's client events.
+- [MenuKit](https://modrinth.com/mod/menukit) 7.2.0 or newer, below 8.0.0. It draws the toolbar at the top of the Key Binds menu and the Keybinds button on other mods' config screens.
+
+[YACL](https://modrinth.com/mod/yacl) 3.9.7 comes bundled inside the jar, so there is nothing extra to install for it.
+
+## Pairs well with
+
+- [Mod Menu](https://modrinth.com/mod/modmenu). Keybindery's own settings open from Mod Menu, and the Keybinds button on other mods' config screens needs it.
+
+## Compatibility
+
+- Minecraft 26.3 with Fabric Loader 0.19.5 or newer.
+- Required on the client and optional on the server.
+- Keybindery changes `KeyMapping` through narrow mixin injections and never overwrites a vanilla method, so other mods that touch the same code still run. That's how it works alongside input mods such as Controlify.
+- If you'd rather use another mod's controls screen, like Controlling's, or vanilla's, you can turn off Keybindery's replacement in its settings.
+- Chords are saved in vanilla's `options.txt`. If you remove Keybindery later, every keybind goes back to a single key.
+
+## How to use
+
+### Open the Key Binds menu
+
+- Press Escape in game. At the right end of the row of small square buttons there is a button with a K key icon. Hovering over it shows "Keybinds".
+- Click it to open the Key Binds menu. Done takes you back to the pause menu.
+- The menu also opens the usual way, through Options, Controls, Key Binds.
+
+### Bind a chord to a keybind
+
+- Each row is a wide button with the keybind's name on the left and its current key on the right.
+- Click the row, then hold down every key of the chord and release them. The chord is the set of keys you held at once, up to six keys, and it saves when the last key comes up.
+- Mouse buttons pressed while the row is waiting for keys become part of the chord.
+- While the row is waiting for keys, Escape, Delete, or Backspace clears the keybind so it's unbound.
+- A chord fires when all of its keys are held down. Every keybind that matches fires, so if `Y` is bound to one action and `Shift + Y` to another, pressing `Shift + Y` fires both.
+- Long keybind names scroll inside the row.
+
+### Conflicts and Reset
+
+- Two keybinds conflict when they share any key. A keybind bound to `S` conflicts with vanilla's Walk Backwards on `S`, and `X + Z` conflicts with `X`. The one overlap that isn't flagged is two vanilla keybinds that are both still at their default keys.
+- A conflicting keybind shows its key in yellow brackets.
+- The warning icon next to each row filters the list to every keybind that shares a key with that row. Hovering over it shows "Show Conflicts". It is grayed out when the row has no conflicts.
+- The reset icon puts the keybind back on its default key. It is grayed out when the keybind is already at its default.
+
+### Search, sort, and filter
+
+The toolbar at the top of the Key Binds menu has two rows.
+
+- **Search by name.** Type part of a keybind's name or its category to narrow the list. Case doesn't matter. Separate terms with `|` to show keybinds that match any of them, as in `Inventory Plus | Hotbar Pockets`.
+- **Search by key chord.** Click the button, hold a chord, and release. The list shows every bound keybind that shares a key with that chord. Right-click the button to clear it. Escape, Delete, or Backspace while it's waiting for keys also clears it.
+- **Sort.** Category (the default), Alphabetical, or Key Chord. Alphabetical and Key Chord show one list without category headings.
+- **Filter.** None (the default), Conflicts, or Not Bound.
+- Changing the search, sort, or filter scrolls the list back to the top.
+- The menu opens with Category sort and no filter each time.
+
+### Fold categories
+
+- With Category sort, each category heading has an arrow. Click a heading to fold its keybinds away, and click it again to unfold them.
+- The Collapse All button folds every category in view. When they're all folded, it changes to Expand All.
+- Folded categories stay folded until you close the game.
+- Keybinds that vanilla would put under Miscellaneous are grouped by the mod they come from instead, under a heading made from the mod's ID.
+
+### Use vanilla's controls screen instead
+
+Keybindery's settings have a Controls Screen tab with one setting.
+
+| Setting | Default | What it does |
+|---|---|---|
+| Disable controls-screen replacement | Off | When on, the game uses vanilla's Key Binds screen instead of Keybindery's. Close and reopen the screen for it to take effect. |
 
 ### Simultaneous Mode
 
-Normally a chord fires while all its keys are held down. Turn on Simultaneous Mode and the keys also have to go down together, within a window you set between 50 and 500 milliseconds (100 by default). Holding Ctrl for a while and then tapping K stops counting as `Ctrl + K`. It's off by default. Turn it on in Keybindery's settings, or bind a key to switch it on and off.
+Normally a chord fires while all of its keys are held, however long ago each one went down. With Simultaneous Mode on, the first presses of all its keys also have to land within a set window, so holding Ctrl for a while and then tapping K no longer counts as `Ctrl + K`.
 
-### Keybinds in each mod's config
+Open Keybindery's settings from Mod Menu. Simultaneous Mode is on the Chord Detection tab.
 
-Every mod's keybinds show up in that mod's own config screen: on a "Keybinds" tab if it uses YACL, or behind a small "Keybinds" button otherwise. This works for any mod listed in Mod Menu. You don't have to dig through the Key Binds menu for one mod's bindings.
+| Setting | Default | Range | What it does |
+|---|---|---|---|
+| Simultaneous Mode | Off | On or off | Requires a chord's keys to go down together. |
+| Simultaneous Window (ms) | 100 | 50 to 500, in steps of 10 | The most time allowed between the first and last key of a chord. Larger is more forgiving, smaller is stricter. It can only be changed while Simultaneous Mode is on. |
 
-### An API for other mods
+To switch the mode while playing, bind the Simultaneous Mode key.
 
-Through Keybindery's API, a mod can build keybind capture straight into its own settings. In a YACL config, one call adds a full keybind row with the chord button, Conflicts icon and Reset icon. A mod with its own custom settings screen can read and set chords directly and draw the rows itself. See Using it as a mod developer below.
+| Key | Category | Default | What it does |
+|---|---|---|---|
+| Simultaneous Mode | Keybindery | Unbound | Turns Simultaneous Mode on or off and shows the new state above your hotbar. |
 
-### On servers
+### Find a mod's keybinds from its settings
 
-Keybindery installs on both client and server. On a server it does nothing by itself. It's there only because mods that require it, like Inventory Plus, load on servers too.
+Keybindery matches keybinds to a mod by the mod's ID in the keybind's name, which is the usual convention for Fabric mods. A mod with no keybinds gets neither the tab nor the button.
 
-## Install
+- **YACL config screens** get a Keybinds tab at the end of their tabs, with one row per keybind. Click a row, then hold and release a chord to bind it. Escape cancels and keeps the old key, Delete or Backspace clears it, and right-clicking the row also clears it. The warning icon opens the Key Binds menu filtered to that keybind's conflicts, and the reset icon puts it back on its default. Changes apply when you save the config screen, like any other YACL setting.
+- The last row of the tab, Keybind Menu, has an Open button that opens the full Key Binds menu with no filter.
+- **Other config screens** opened from Mod Menu get a Keybinds button in the top-right corner. It opens the Key Binds menu with the search box filled in with that mod's category, so you can see the filter and clear it.
 
-Drop the jar in your `mods/` folder along with Fabric API. YACL is bundled inside the jar.
+## For mod developers
 
-Requires:
+Other mods can use Keybindery to put chord keybind buttons in their own settings screens and to create key bindings while the game runs.
 
-- Minecraft 26.3 (this build)
-- Fabric Loader 0.19.5 or newer
-- Fabric API
-- MenuKit 7.1.0 or newer, below 8.0.0
+### What the API provides
 
-[YACL](https://modrinth.com/mod/yacl) 3.9.7 comes bundled, so there is no separate install.
+- Read and set the chord on any `KeyMapping`.
+- Add a keybind row to a YACL config with one call. It adds a label, then a row with the chord button, the warning icon for conflicts, and the reset icon.
+- Open the Key Binds menu filtered to one mod or several, and check whether a mod has any keybinds.
+- Check whether every key of a mapping's chord is held right now, with `isHeld`. It works while a screen is open, unlike `KeyMapping.isDown()`.
+- Register key bindings while the game runs, one for each thing the player makes, like a sandbox. These aren't in the Key Binds menu, and the mod shows and saves them itself.
+- Get a vanilla button that captures a chord, for any screen or list.
+- For MenuKit screens, `ChordButton` is a MenuKit element with the chord button, the warning icon, and the reset icon in one row. It lives in the Keybindery jar rather than the API jar, so a mod that uses it requires Keybindery.
+- Without Keybindery installed, every API call does nothing safely, so a mod can support it without requiring it.
 
-Recommended: [Mod Menu](https://modrinth.com/mod/modmenu). The per-mod keybind lists use it to work out which keybinds belong to which mod.
-
-## Using it as a player
-
-### Bind a chord to any keybind
-
-Open the Key Binds menu (Options, Controls, Key Binds). Click any row's chord button and press the chord you want: hold all the keys together, then release. The chord saves.
-
-To clear a binding, right-click the chord button during normal browsing, or press Delete or Backspace mid-capture. Press Escape mid-capture to cancel without changing anything.
-
-### Turn on Simultaneous Mode
-
-Open Keybindery's settings through Mod Menu and turn on Simultaneous Mode. A Simultaneous Window setting appears under it: larger is more forgiving about how close together you press the keys, smaller is stricter. To switch the mode on the fly, bind the Simultaneous Mode key in the Keybindery section of Controls. Each press flips it and shows the new state above your hotbar.
-
-### Open your keybinds from the pause menu
-
-Press Escape in game. The Keybinds button is at the right end of the row of square buttons under Advancements and Statistics. Click it to open the Key Binds menu. Done takes you back to the pause menu.
-
-### Find a mod's keybinds quickly
-
-Open any mod's config screen through Mod Menu. If the mod uses YACL, there's a "Keybinds" tab at the top. Otherwise look for a small "Keybinds" button in the top-right corner. Clicking it opens the controls screen filtered to that mod's keybinds.
-
-### Search and filter the controls screen
-
-At the top of the Key Binds menu:
-
-- Search by name: type a keybind's name or its category to narrow the list. Separate terms with `|` to show keybinds that match any of them, as in `Inventory Plus | Hotbar Pockets`.
-- Search by key chord: click and press any chord. The list shows every keybind that shares a key with that chord, which is the quickest way to find conflicts.
-- Sort: by category (default), alphabetical, or by key chord.
-- Filter: only conflicting binds, only unbound binds, or no filter.
-
-Press Escape while capturing in Search by key chord to clear the filter.
-
-### Conflict and Reset icons on each row
-
-The warning icon opens the controls screen filtered to every keybind this one conflicts with. It is grayed out when the row has no conflicts.
-
-The reset icon returns the keybind to its default. It is grayed out when the keybind is already at default.
-
-## Using it as a mod developer
-
-Keybindery ships a small API jar (`keybindery-api`) you depend on at compile time. Players still install the regular Keybindery mod.
-
-### Read or write a chord
-
-```java
-import com.trevorschoeny.keybindery.api.Chord;
-import com.trevorschoeny.keybindery.api.KeybinderyAPI;
-
-KeyMapping myKey = ...; // your existing KeyMapping
-KeybinderyAPI api = KeybinderyAPI.getInstance();
-
-Chord chord = api.getChord(myKey);     // current chord, or Chord.UNBOUND
-api.setChord(myKey, newChord);          // overwrite
-```
-
-### Add chord-binding rows to your YACL config
+### Example
 
 ```java
 ConfigCategory keybindsCategory = ConfigCategory.createBuilder()
@@ -111,17 +152,20 @@ ConfigCategory keybindsCategory = ConfigCategory.createBuilder()
         .build();
 ```
 
-That one call adds the label, chord button, Conflicts icon, and Reset icon to the category. It also marks the mapping as claimed, so Keybindery won't list it a second time on a fallback Keybinds tab.
+### Getting started
 
-### Mark a keybind as surfaced in your own UI
+The public interface and the `Chord` class are in a separate jar, `keybindery-api`. Compile against it. Keybindery bundles `keybindery-api` inside its own jar, so players install Keybindery and nothing else. A mod that uses `ChordButton` depends on Keybindery itself.
 
-If you render keybind rows yourself instead of through `createYACLChordOption`, tell Keybindery to skip auto-listing them:
+### Read or set a chord
 
 ```java
-KeybinderyAPI.getInstance().markClaimed(myKey);
+KeybinderyAPI api = KeybinderyAPI.getInstance();
+
+Chord chord = api.getChord(myKey);     // current chord, or Chord.UNBOUND
+api.setChord(myKey, newChord);          // overwrite
 ```
 
-You can call it more than once.
+`setChord` saves the game's options right away, so the chord survives a restart.
 
 ### Open the Key Binds menu for a mod
 
@@ -135,19 +179,38 @@ if (api.hasKeybinds("mymod")) {
 
 The menu opens over `currentScreen` with the search box already filled in, so the player can see the filter and clear it.
 
-### Stub behavior
+### Register key bindings at runtime
 
-`keybindery-api` is a separate jar with no runtime dependency on Keybindery. If a player doesn't have Keybindery installed, every API call goes to a stub that does nothing: chords read as `UNBOUND`, writes do nothing, `createYACLChordOption` returns a single disabled "Keybindery not installed" label, `hasKeybinds` returns false, and `openModKeybinds` does nothing. Your mod's UI still renders.
+For a key binding that belongs to something the player makes while playing, like a sandbox or a lock group, register it with `bindings()` instead of creating a `KeyMapping`.
 
-## Compatibility
+```java
+RuntimeBindings bindings = KeybinderyAPI.getInstance().bindings();
+Identifier id = Identifier.fromNamespaceAndPath("mymod", "sandbox/nether_test");
 
-Vanilla single-key bindings keep working. Mods that don't opt into chords behave exactly as before.
+bindings.register(id, Component.literal("Sandbox: Nether test"), chord, () -> openSandbox());
+List<BindingConflict> clashes = bindings.conflicts(chord, id); // everything else sharing a key
+bindings.unregister(id);
+```
 
-Keybindery changes `KeyMapping` through narrow mixin injections and never overwrites a vanilla method, so other mods that touch the same code still run. That's how it works alongside input mods such as Controlify.
+Registering again with the same id replaces the binding. A binding fires on the same presses vanilla passes to key mappings, follows the player's chord mode (including Simultaneous Mode), and runs on the client thread. The label is what shows when the binding comes up as a conflict. `conflicts` checks the player's key mappings by the same rule as the Key Binds menu, plus every other runtime binding. Runtime bindings aren't saved, so store the chord with `Chord.serialize()` and register it again at startup.
 
-Cross-mod conflict detection uses one rule: any shared key counts. A mod that defaults a keybind to `S` is flagged as conflicting with vanilla's walk-back `S`. The only overlap not flagged is vanilla against vanilla, since Mojang designed those defaults to coexist.
+### A chord button for your own screen
 
-Chords are saved alongside vanilla's `options.txt`. Removing Keybindery later restores single-key behavior for every bind.
+`captureWidget` returns a vanilla button that captures a chord.
+
+```java
+AbstractWidget button = KeybinderyAPI.getInstance().captureWidget(x, y, 150, 20, chord, newChord -> {
+    saveChord(newChord.serialize());
+    bindings.register(id, label, newChord, onPress);
+});
+if (button != null) addRenderableWidget(button);
+```
+
+The player clicks it, presses a chord, and lets go, and `onChange` gets the chord. Escape or Delete while capturing clears it, and so does a right-click. The button keeps showing the latest chord, and the mod stores it.
+
+### Without Keybindery installed
+
+`keybindery-api` has no runtime dependency on Keybindery. If a player doesn't have Keybindery, every call goes to a stub. Chords read as `UNBOUND` and writes do nothing. `createYACLChordOption` returns one disabled label that reads "\<label\>: (Keybindery not installed)". `hasKeybinds` and `isHeld` return false, and `openModKeybinds` does nothing. Runtime bindings register nothing, `conflicts` returns an empty list, and `captureWidget` returns `null`, so leave the button out when it does. The mod's own screens still render.
 
 ## License
 
